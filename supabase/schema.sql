@@ -1,0 +1,1 @@
+-- Database schema for the Local Adventures & Activities Guide (Supabase / Postgres).
