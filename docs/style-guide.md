@@ -18,21 +18,22 @@ The look is called **Trailhead**: an outdoorsy, welcoming style. Deep forest gre
 
 Only use Tailwind's `emerald` (greens) and `amber` (creams and gold) palettes. Don't add other color families without agreeing as a team.
 
-| Role | Tailwind class | Approx. hex | Used for |
-|---|---|---|---|
-| Forest (base dark) | `bg-emerald-900` | `#064e3b` | Header, bottom nav, hero band, icon circles, secondary dark buttons |
-| Forest hover | `bg-emerald-800` | `#065f46` | Hover on dark buttons and nav items; bottom nav top border |
-| Hill / accent green | `emerald-700` | `#047857` | Back layer of the mountain silhouette; small labels ("Step 1") on cream |
-| Ink | `text-emerald-950` | `#022c22` | Default text color on cream and gold backgrounds |
-| Soft ink | `text-emerald-900/80` | — | Body paragraphs on cream |
-| Light text on dark | `text-emerald-100` | `#d1fae5` | Paragraphs inside dark green bands |
-| Inactive nav on dark | `text-emerald-200` | `#a7f3d0` | Bottom nav items that aren't the current page |
-| Light band | `bg-emerald-100/60` | — | Alternating full-width sections on cream |
-| Cream (page) | `bg-amber-50` | `#fffbeb` | Default page background, cards on light-green bands, headline text on dark |
-| Pale cream | `amber-100` / `amber-200` | `#fef3c7` / `#fde68a` | Faint borders and outlines on dark green (`border-amber-100/40`), primary button hover |
-| Gold (accent) | `amber-300` | `#fcd34d` | Primary buttons, current nav item, eyebrow labels on dark, call-to-action panels, icons inside forest circles |
+| Role                 | Tailwind class            | Approx. hex           | Used for                                                                                                      |
+| -------------------- | ------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Forest (base dark)   | `bg-emerald-900`          | `#064e3b`             | Header, bottom nav, hero band, icon circles, secondary dark buttons                                           |
+| Forest hover         | `bg-emerald-800`          | `#065f46`             | Hover on dark buttons and nav items; bottom nav top border                                                    |
+| Hill / accent green  | `emerald-700`             | `#047857`             | Back layer of the mountain silhouette; small labels ("Step 1") on cream                                       |
+| Ink                  | `text-emerald-950`        | `#022c22`             | Default text color on cream and gold backgrounds                                                              |
+| Soft ink             | `text-emerald-900/80`     | —                     | Body paragraphs on cream                                                                                      |
+| Light text on dark   | `text-emerald-100`        | `#d1fae5`             | Paragraphs inside dark green bands                                                                            |
+| Inactive nav on dark | `text-emerald-200`        | `#a7f3d0`             | Bottom nav items that aren't the current page                                                                 |
+| Light band           | `bg-emerald-100/60`       | —                     | Alternating full-width sections on cream                                                                      |
+| Cream (page)         | `bg-amber-50`             | `#fffbeb`             | Default page background, cards on light-green bands, headline text on dark                                    |
+| Pale cream           | `amber-100` / `amber-200` | `#fef3c7` / `#fde68a` | Faint borders and outlines on dark green (`border-amber-100/40`), primary button hover                        |
+| Gold (accent)        | `amber-300`               | `#fcd34d`             | Primary buttons, current nav item, eyebrow labels on dark, call-to-action panels, icons inside forest circles |
 
 Rules:
+
 - **Every page sets `bg-amber-50 text-emerald-950` on its outer wrapper** (see the page template in section 10). `app/globals.css` darkens the page when the OS is in dark mode. There is no dark mode design yet, so pages must set their own colors.
 - **Gold is for action and "you are here".** Use it for primary buttons, the current nav item, call-to-action panels and small labels on dark green. Never use gold text on cream (unreadable).
 - Text on dark green is `amber-50` (headlines), `emerald-100` (paragraphs) or `amber-300` (labels). Text on cream or gold is `emerald-950` or `emerald-900/80`.
@@ -43,20 +44,21 @@ Rules:
 
 One sans-serif font family for everything. The personality comes from weight and size, not from mixing fonts.
 
-| Element | Classes |
-|---|---|
-| Page title (h1) | `text-4xl font-extrabold leading-tight md:text-6xl` (limit width with `max-w-2xl`) |
-| Section heading (h2) | `text-2xl font-extrabold md:text-3xl` |
-| Card / item heading (h3) | `text-lg font-bold` |
-| Eyebrow label (above h1) | `text-sm font-semibold uppercase tracking-widest` (`text-amber-300` on dark) |
-| Intro / lead paragraph | `text-lg` (`text-emerald-100` on dark), max width `max-w-xl` |
-| Body paragraph | base size, `text-emerald-900/80` on cream |
-| Small label (e.g. "Step 1") | `text-sm font-bold text-emerald-700` |
-| Button text | `font-bold` (primary) or `font-semibold` (secondary) |
-| Nav text | `text-sm font-medium` (desktop), `text-[11px] font-medium` (bottom bar) |
-| Site name | `font-bold leading-tight`, with the last word in `text-amber-300` |
+| Element                     | Classes                                                                            |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| Page title (h1)             | `text-4xl font-extrabold leading-tight md:text-6xl` (limit width with `max-w-2xl`) |
+| Section heading (h2)        | `text-2xl font-extrabold md:text-3xl`                                              |
+| Card / item heading (h3)    | `text-lg font-bold`                                                                |
+| Eyebrow label (above h1)    | `text-sm font-semibold uppercase tracking-widest` (`text-amber-300` on dark)       |
+| Intro / lead paragraph      | `text-lg` (`text-emerald-100` on dark), max width `max-w-xl`                       |
+| Body paragraph              | base size, `text-emerald-900/80` on cream                                          |
+| Small label (e.g. "Step 1") | `text-sm font-bold text-emerald-700`                                               |
+| Button text                 | `font-bold` (primary) or `font-semibold` (secondary)                               |
+| Nav text                    | `text-sm font-medium` (desktop), `text-[11px] font-medium` (bottom bar)            |
+| Site name                   | `font-bold leading-tight`, with the last word in `text-amber-300`                  |
 
 Rules:
+
 - One `h1` per page. Don't skip heading levels.
 - Use sentence case for headings ("How it works", not "How It Works"). Only eyebrow labels are uppercase.
 - Headings are `font-extrabold`. Don't use `font-black` or thin weights.
@@ -76,6 +78,7 @@ Rules:
 ## 5. Components
 
 ### Site navigation
+
 - `components/SiteNav.tsx`, rendered once in `app/layout.tsx`. **Don't add a nav to individual pages.**
 - Header: sticky, `bg-emerald-900`, `h-16`, logo and site name on the left.
 - Phones: a fixed bottom tab bar (`bg-emerald-900`, icon above label). Inactive items are `emerald-200`, the current page is `amber-300`.
@@ -85,34 +88,40 @@ Rules:
 - Header and bottom bar use `z-[1100]` so they stay above the Leaflet map. Don't lower it.
 
 ### Buttons and links
-| Kind | Classes | When |
-|---|---|---|
-| Primary | `rounded-full bg-amber-300 px-6 py-3 text-center font-bold text-emerald-950 hover:bg-amber-200` | The main action of a section. Max one per section |
-| Secondary on dark | `rounded-full border border-amber-100/40 px-6 py-3 text-center font-semibold hover:bg-emerald-800` | Second action next to a primary button in a dark green band |
-| Dark on light | `rounded-full bg-emerald-900 px-6 py-3 font-bold text-amber-50 hover:bg-emerald-800` | Main action inside a gold panel or on cream |
-| Chip / category link | `rounded-full border-2 border-emerald-900 px-4 py-2 font-semibold hover:bg-emerald-900 hover:text-amber-50` | A set of short links (categories, filters) |
+
+| Kind                 | Classes                                                                                                     | When                                                        |
+| -------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Primary              | `rounded-full bg-amber-300 px-6 py-3 text-center font-bold text-emerald-950 hover:bg-amber-200`             | The main action of a section. Max one per section           |
+| Secondary on dark    | `rounded-full border border-amber-100/40 px-6 py-3 text-center font-semibold hover:bg-emerald-800`          | Second action next to a primary button in a dark green band |
+| Dark on light        | `rounded-full bg-emerald-900 px-6 py-3 font-bold text-amber-50 hover:bg-emerald-800`                        | Main action inside a gold panel or on cream                 |
+| Chip / category link | `rounded-full border-2 border-emerald-900 px-4 py-2 font-semibold hover:bg-emerald-900 hover:text-amber-50` | A set of short links (categories, filters)                  |
 
 - Button groups stack on phones and sit side by side from `sm:` up: `flex flex-col gap-3 sm:flex-row`. Stacked buttons are full width, which makes them easy to tap.
 - Use `<Link>` from `next/link` for internal links. Use `<button>` for actions that don't navigate.
 
 ### Cards
+
 - `rounded-2xl bg-amber-50 p-6 shadow-sm`, usually on a light-green band.
 - Card heading row: an icon circle (`grid size-10 place-items-center rounded-full bg-emerald-900 text-amber-300` with a `size-5` icon) + a small label (`text-sm font-bold text-emerald-700`).
 - Then `h3` (`mt-4 text-lg font-bold`) and a paragraph (`mt-2 text-emerald-900/80`).
 - Use `<ol>` for steps where order matters, `<ul>` otherwise.
 
 ### Call-to-action panel
+
 - `rounded-3xl bg-amber-300 p-8`, with the heading and text on the left and a "dark on light" button on the right from `md:` up (`md:flex md:items-center md:justify-between`). On phones the button sits below with `mt-6`.
 - Max one per page, near the bottom.
 
 ### Mountain silhouette (band divider)
+
 - The hero ends with an SVG ridge line: a back layer filled with `fill-emerald-700` and a front layer filled with the color of the next section (`fill-amber-50`). It sits at the bottom of the band (`absolute inset-x-0 bottom-0 h-16 md:h-28`, `preserveAspectRatio="none"`, `aria-hidden="true"`).
 - Use it only where a dark green band meets a cream section, and at most once or twice per page. Copy the paths from `app/page.tsx`. If the next section isn't cream, change the front layer's fill to match it.
 
 ### Images
+
 - Rounded corners to match cards (`rounded-2xl`). Use plain `<img>` or `next/image` with `unoptimized` (static export), and always fill in `alt` (`alt=""` for decorative images).
 
 ### Logo and site name
+
 - Both are placeholders in `SiteNav.tsx`: `LogoSlot` (a dashed `size-10 rounded-lg` box) and the "Rexburg **Adventures**" text. When the real ones arrive, replace them there only.
 
 ## 6. Shape, borders and depth
@@ -165,18 +174,24 @@ export default function ExamplePage() {
             <h1 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight md:text-6xl">
               Page title
             </h1>
-            <p className="mt-4 max-w-xl text-lg text-emerald-100">One or two sentence intro.</p>
+            <p className="mt-4 max-w-xl text-lg text-emerald-100">
+              One or two sentence intro.
+            </p>
           </div>
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-          <h2 className="text-2xl font-extrabold md:text-3xl">Section heading</h2>
+          <h2 className="text-2xl font-extrabold md:text-3xl">
+            Section heading
+          </h2>
           <p className="mt-4 text-emerald-900/80">Content.</p>
         </section>
 
         <section className="bg-emerald-100/60">
           <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-            <h2 className="text-2xl font-extrabold md:text-3xl">Another section</h2>
+            <h2 className="text-2xl font-extrabold md:text-3xl">
+              Another section
+            </h2>
             {/* cards: rounded-2xl bg-amber-50 p-6 shadow-sm */}
           </div>
         </section>
