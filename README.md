@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Local Adventures & Activities Guide
 
-## Getting Started
+A guide to things to do in Rexburg, Idaho (BYU-Idaho class project). It has static content pages (Home, Outdoor, Indoor, Food & Treats, Weekend Events, About/Contact/FAQ, How to Submit Ideas) and an interactive "App" page: a Rexburg map where anyone can click to create an event, others can join, the attendee count is shown, and events can be filtered by day.
 
-First, run the development server:
+## Stack
+- Next.js (App Router) + TypeScript + Tailwind CSS, npm
+- Static export, deployed on Vercel
+- Leaflet + react-leaflet on OpenStreetMap tiles
+- Supabase (Postgres + anonymous auth), called directly from the browser
+- No custom backend
 
+## Running locally
 ```bash
+npm install
+cp .env.example .env.local   # then fill in the Supabase values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+Open http://localhost:3000. Before merging, `npm run build` and `npm run lint` must pass.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Folder map
+- `app/` pages and layout (App Router)
+- `components/` React components (`components/map/` for the map)
+- `content/` JSON content read by the static pages at build time
+- `lib/` Supabase client and shared types
+- `supabase/` database schema (`schema.sql`)
+- `docs/` architecture notes, gotchas and feature docs
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Git workflow
+- No pull requests. Everyone can push to `main`.
+- One branch per feature: `feature/<short-name>`.
+- To finish a feature: `git pull origin main` into your branch, run `npm run build` and `npm run lint`, then merge into `main` yourself and push.
+- Never run `git push --force`. Never commit secrets or `.env.local`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## For AI agents
+AI coding agents read `AGENTS.md` (rules and conventions) and the files in `docs/` (`architecture.md`, `gotchas.md`). Keep those up to date when the project changes.
