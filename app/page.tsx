@@ -1,113 +1,142 @@
 // Owner: HTML teammate
 import Link from "next/link";
+import { PinIcon, UsersIcon, SearchIcon } from "@/components/icons";
 
 const steps = [
   {
-    title: "Explore the guide",
-    text: "Read up on outdoor trips, indoor spots, food and treats, and what's on this weekend.",
+    Icon: SearchIcon,
+    title: "Find something to do",
+    text: "Browse outdoor trips, indoor hangouts, food spots and weekend events around Rexburg.",
   },
   {
-    title: "Open the map",
-    text: "See upcoming events around Rexburg and filter them by day.",
+    Icon: PinIcon,
+    title: "Drop a pin",
+    text: "Tap the map to create an event. Pick the place, the activity and a day and time.",
   },
   {
-    title: "Start or join an event",
-    text: "Tap the map to set a place, activity and time. Others can join, and everyone sees the headcount.",
+    Icon: UsersIcon,
+    title: "Bring people along",
+    text: "Others can join your event, and you can see how many are going before you head out.",
   },
 ];
 
-const pins = [
-  { pos: "top-[22%] left-[28%]", label: "Porter Park", count: 6 },
-  { pos: "top-[55%] left-[62%]", label: "Teton River", count: 11 },
-  { pos: "top-[70%] left-[20%]", label: "Campus", count: 3 },
+const categories = [
+  { href: "/outdoor", label: "Outdoor" },
+  { href: "/indoor", label: "Indoor" },
+  { href: "/food", label: "Food & Treats" },
+  { href: "/weekend", label: "Weekend Events" },
 ];
 
 export default function HomePage() {
   return (
-    <div className="flex flex-1 flex-col bg-stone-50 text-stone-900">
+    <div className="flex flex-1 flex-col bg-amber-50 text-emerald-950">
       <main className="flex-1">
         {/* Hero */}
-        <section className="mx-auto grid max-w-6xl gap-10 px-4 py-10 md:grid-cols-[1.2fr_1fr] md:items-center md:py-20">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">
-              Things to do · Rexburg, Idaho
+        <section className="relative bg-emerald-900 text-amber-50">
+          <div className="mx-auto max-w-6xl px-4 pt-10 pb-28 md:pt-20 md:pb-40">
+            <p className="text-sm font-semibold uppercase tracking-widest text-amber-300">
+              Rexburg, Idaho
             </p>
-            <h1 className="mt-4 font-serif text-5xl leading-[1.05] md:text-7xl">
-              Get out there.
-              <br />
-              <span className="italic text-orange-700">Together.</span>
+            <h1 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight md:text-6xl">
+              Find your next adventure, and someone to go with.
             </h1>
-            <p className="mt-6 max-w-md text-lg text-stone-600">
-              A guide to the places worth going in Rexburg, and a shared map for making plans with
-              other people.
+            <p className="mt-4 max-w-xl text-lg text-emerald-100">
+              A local guide to fun things to do around town, plus a live map where you can plan
+              outings and see who&apos;s coming.
             </p>
-            <Link
-              href="/map"
-              className="mt-8 inline-flex items-center gap-2 bg-stone-900 px-6 py-3 font-semibold text-stone-50 hover:bg-orange-700"
-            >
-              Explore the map <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-
-          {/* Mini map preview */}
-          <Link
-            href="/map"
-            aria-label="Open the map"
-            className="relative block aspect-[4/3] overflow-hidden border border-stone-300 bg-[#e8e4d8]"
-          >
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#d6d0bf_1px,transparent_1px),linear-gradient(to_bottom,#d6d0bf_1px,transparent_1px)] bg-[size:32px_32px]" />
-            <div className="absolute top-0 bottom-0 left-[45%] w-3 -skew-x-12 bg-sky-300/70" />
-            <div className="absolute top-[40%] right-0 left-0 h-1.5 bg-white" />
-            <div className="absolute top-0 bottom-0 left-[70%] w-1.5 bg-white" />
-            {pins.map((p) => (
-              <div
-                key={p.label}
-                className={`absolute flex -translate-x-1/2 -translate-y-full flex-col items-center ${p.pos}`}
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/map"
+                className="rounded-full bg-amber-300 px-6 py-3 text-center font-bold text-emerald-950 hover:bg-amber-200"
               >
-                <span className="whitespace-nowrap bg-stone-900 px-2 py-1 text-xs font-semibold text-stone-50">
-                  {p.label} · {p.count} going
-                </span>
-                <span className="size-3 rotate-45 -translate-y-1.5 bg-stone-900" />
-                <span className="size-3 rounded-full border-2 border-stone-50 bg-orange-600" />
-              </div>
-            ))}
-          </Link>
+                Open the map
+              </Link>
+              <Link
+                href="/submit-ideas"
+                className="rounded-full border border-amber-100/40 px-6 py-3 text-center font-semibold hover:bg-emerald-800"
+              >
+                Suggest an idea
+              </Link>
+            </div>
+          </div>
+          {/* Mountain silhouette */}
+          <svg
+            viewBox="0 0 1440 120"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-16 w-full md:h-28"
+          >
+            <path
+              d="M0 120V80l120-30 90 25 160-65 140 55 110-30 180 50 150-70 170 60 120-35 200 45v35Z"
+              className="fill-emerald-700"
+            />
+            <path
+              d="M0 120V95l180-25 140 30 200-40 160 35 220-30 180 25 160-35 200 40v25Z"
+              className="fill-amber-50"
+            />
+          </svg>
         </section>
 
-        {/* About */}
-        <section className="border-y border-stone-300 bg-white">
-          <div className="mx-auto max-w-6xl px-4 py-12 md:grid md:grid-cols-[1fr_2fr] md:gap-12 md:py-16">
-            <h2 className="font-serif text-3xl">What this is</h2>
-            <p className="mt-4 text-lg leading-relaxed text-stone-700 md:mt-0">
-              Made by BYU-Idaho students, the Field Guide gathers the best outdoor, indoor, food
-              and weekend activities in and around Rexburg in one place. When you find something
-              you want to do, put it on the map and see who wants to come along.
-            </p>
+        {/* What is this */}
+        <section className="mx-auto max-w-6xl px-4 py-12 md:py-16">
+          <div className="grid gap-8 md:grid-cols-2 md:items-center">
+            <div>
+              <h2 className="text-2xl font-extrabold md:text-3xl">What is this site?</h2>
+              <p className="mt-4 text-emerald-900/80">
+                Rexburg Adventures collects the best places to explore, eat and hang out in and
+                around Rexburg, from Porter Park to the St. Anthony Sand Dunes. It&apos;s built by
+                students, for anyone looking for something to do this week.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c) => (
+                <Link
+                  key={c.href}
+                  href={c.href}
+                  className="rounded-full border-2 border-emerald-900 px-4 py-2 font-semibold hover:bg-emerald-900 hover:text-amber-50"
+                >
+                  {c.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* How it works */}
+        <section className="bg-emerald-100/60">
+          <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
+            <h2 className="text-2xl font-extrabold md:text-3xl">How it works</h2>
+            <ol className="mt-8 grid gap-4 md:grid-cols-3">
+              {steps.map(({ Icon, title, text }, i) => (
+                <li key={title} className="rounded-2xl bg-amber-50 p-6 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-10 place-items-center rounded-full bg-emerald-900 text-amber-300">
+                      <Icon className="size-5" />
+                    </span>
+                    <span className="text-sm font-bold text-emerald-700">Step {i + 1}</span>
+                  </div>
+                  <h3 className="mt-4 text-lg font-bold">{title}</h3>
+                  <p className="mt-2 text-emerald-900/80">{text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* Submit CTA */}
         <section className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-          <h2 className="font-serif text-3xl">How to use it</h2>
-          <ol className="mt-8 grid gap-8 md:grid-cols-3">
-            {steps.map((s, i) => (
-              <li key={s.title} className="border-t-2 border-stone-900 pt-4">
-                <span className="font-serif text-4xl text-orange-700">0{i + 1}</span>
-                <h3 className="mt-2 text-lg font-semibold">{s.title}</h3>
-                <p className="mt-2 text-stone-600">{s.text}</p>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-12 text-stone-600">
-            Know a place we missed?{" "}
+          <div className="rounded-3xl bg-amber-300 p-8 md:flex md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-extrabold">Know a hidden gem?</h2>
+              <p className="mt-2 text-emerald-950/80">Share it and help others find it too.</p>
+            </div>
             <Link
               href="/submit-ideas"
-              className="font-semibold text-stone-900 underline decoration-orange-600 decoration-2 underline-offset-4 hover:text-orange-700"
+              className="mt-6 inline-block rounded-full bg-emerald-900 px-6 py-3 font-bold text-amber-50 hover:bg-emerald-800 md:mt-0"
             >
               Submit an idea
             </Link>
-            .
-          </p>
+          </div>
         </section>
       </main>
     </div>

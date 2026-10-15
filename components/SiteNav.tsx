@@ -6,12 +6,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navLinks } from "@/components/icons";
 
-// Placeholder name and logo until the team picks real ones.
-export const SITE_NAME = "The Rexburg Field Guide";
-
+// Placeholder logo until the team has a real one.
 function LogoSlot() {
   return (
-    <div className="grid size-9 place-items-center rounded-full border border-stone-900 text-[9px] font-bold tracking-wider">
+    <div className="grid size-10 place-items-center rounded-lg border-2 border-dashed border-amber-200/60 text-[10px] font-bold tracking-wider text-amber-100">
       LOGO
     </div>
   );
@@ -27,20 +25,24 @@ export default function SiteNav() {
 
   return (
     <>
-      <header className="border-b border-stone-300 bg-stone-50 text-stone-900">
+      {/* z-[1100] keeps the header and bottom bar above Leaflet's map panes and controls (z-index up to 1000) on /map. */}
+      <header className="sticky top-0 z-[1100] bg-emerald-900 text-amber-50">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-3">
             <LogoSlot />
-            <span className="font-serif text-xl italic">{SITE_NAME}</span>
+            {/* Placeholder site name */}
+            <span className="font-bold leading-tight">
+              Rexburg <span className="text-amber-300">Adventures</span>
+            </span>
           </Link>
           <nav aria-label="Main" className="hidden md:block">
-            <ul className="flex gap-8 text-sm font-medium">
+            <ul className="flex gap-1">
               {navLinks.map(({ href, label }) => (
                 <li key={href}>
                   <Link
                     href={href}
                     aria-current={isActive(pathname, href) ? "page" : undefined}
-                    className="border-b-2 border-transparent py-5 hover:border-stone-400 aria-[current=page]:border-orange-600"
+                    className="rounded-full px-4 py-2 text-sm font-medium hover:bg-emerald-800 aria-[current=page]:bg-amber-300 aria-[current=page]:text-emerald-950"
                   >
                     {label}
                   </Link>
@@ -51,10 +53,9 @@ export default function SiteNav() {
         </div>
       </header>
 
-      {/* z-[1100] keeps the bar above Leaflet's map controls (z-index 1000) on /map. */}
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-[1100] border-t border-stone-300 bg-stone-50 pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-[1100] border-t border-emerald-800 bg-emerald-900 pb-[env(safe-area-inset-bottom)] text-emerald-200 md:hidden"
       >
         <ul className="grid grid-cols-4">
           {navLinks.map(({ href, label, Icon }) => (
@@ -62,7 +63,7 @@ export default function SiteNav() {
               <Link
                 href={href}
                 aria-current={isActive(pathname, href) ? "page" : undefined}
-                className="flex flex-col items-center gap-1 border-t-2 border-transparent py-2.5 text-[11px] font-medium text-stone-500 aria-[current=page]:border-orange-600 aria-[current=page]:text-stone-900"
+                className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium hover:text-amber-50 aria-[current=page]:text-amber-300"
               >
                 <Icon className="size-6" />
                 {label}
