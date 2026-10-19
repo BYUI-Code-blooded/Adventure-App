@@ -36,3 +36,4 @@ Static content pages (Home, Outdoor, Indoor, Food & Treats, Weekend Events, Abou
 ## Read on demand
 - `docs/architecture.md` before changing structure, data flow or Supabase.
 - `docs/gotchas.md` before touching the map, dates, Supabase, env vars or deployment.
+- `docs/style-guide.md` before building or changing any page or UI component.
