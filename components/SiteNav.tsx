@@ -68,8 +68,8 @@ export default function SiteNav() {
               </ul>
             </nav>
             <Link
-              href="/login"
-              aria-current={isActive(pathname, "/login") ? "page" : undefined}
+              href={signedIn ? "/account" : "/login"}
+              aria-current={isActive(pathname, signedIn ? "/account" : "/login") ? "page" : undefined}
               className="ml-2 rounded-full bg-amber-300 px-4 py-2 text-sm font-bold text-emerald-950 hover:bg-amber-200"
             >
               {signedIn ? "Account" : "Sign in"}
