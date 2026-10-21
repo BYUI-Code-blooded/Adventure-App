@@ -32,16 +32,19 @@ Pages read JSON from `content/*.json` at build time (for example `content/outdoo
 5. Filter events by day.
 
 ## 5. Data model (summary)
-Exact fields are decided in sprint 0.
-- `events`
-- `event_attendees` (composite primary key `event_id` + `user_id`)
+The source of truth is `supabase/schema.sql`.
+- `profiles`: one private row per auth user (`name`, `phone`, `role`: `user`, `developer` or `admin`). The email lives in `auth.users`. Other users only see `id` and `name` through the `public_profiles` view.
+- `activities`: places or things to do (`name`, `description`, `address`, `lat`, `lng`, `photo_url`, `category`, `is_featured`, `created_by`). Only staff (admin or developer) can set `is_featured`.
+- `events`: an activity scheduled at a time (`activity_id`, `creator_id`, `start_time`, `end_time`, `max_participants`).
+- `event_attendees`: who joined which event (composite primary key `event_id` + `user_id`). The count is the number of rows; joins are rejected once the event is full.
 
-Use `starts_at timestamptz` and group by day in `America/Denver`.
+Use `start_time timestamptz`; group by day in `America/Denver`.
 
 ## 6. Security model
 - The publishable key is public by design; security comes from RLS.
 - One policy per operation, using `(select auth.uid())`.
 - Select policy is `to anon, authenticated`.
+- Column-level grants stop users from changing roles, ownership and ids.
 - Check constraints on text lengths.
 - The secret/service_role key is never used.
 

@@ -1,6 +1,8 @@
 -- Database schema for the Local Adventures & Activities Guide (Supabase / Postgres).
 -- Run once in the Supabase SQL Editor (or `supabase db push`) on a fresh project.
 -- RLS is enabled explicitly on every table. Policies use (select auth.uid()).
+-- Supabase grants anon/authenticated full DML on new public objects by default, so
+-- every table/view below restricts privileges explicitly and RLS does the rest.
 
 -- ============================================================
 -- profiles: one private row per auth user (email lives in auth.users)
@@ -29,9 +31,12 @@ create policy "profiles_update_own" on public.profiles
 revoke update on public.profiles from anon, authenticated;
 grant update (name, phone) on public.profiles to authenticated;
 
--- Public, safe view: only id and name (no phone, no role).
+-- Public, read-only view: only id and name (no phone, no role).
+-- Views run with their owner's rights and are auto-updatable, so remove all
+-- default privileges first and grant SELECT only.
 create view public.public_profiles as
   select id, name from public.profiles;
+revoke all on public.public_profiles from public, anon, authenticated;
 grant select on public.public_profiles to anon, authenticated;
 
 -- Create the profile automatically when a user signs up.
@@ -67,8 +72,13 @@ as $$
   );
 $$;
 
+-- Only signed-in users need it (it is only used by policies that apply to them).
+revoke execute on function public.is_staff() from public, anon;
+grant execute on function public.is_staff() to authenticated;
+
 -- ============================================================
 -- activities: curated by us (is_featured) or created by users
+-- created_by becomes null if the author's account is deleted (content is kept).
 -- ============================================================
 create table public.activities (
   id uuid primary key default gen_random_uuid(),
@@ -80,7 +90,7 @@ create table public.activities (
   photo_url text check (photo_url is null or (photo_url ~ '^https://' and char_length(photo_url) <= 500)),
   category text not null check (category in ('outdoor', 'indoor', 'food', 'weekend')),
   is_featured boolean not null default false,
-  created_by uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  created_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -113,18 +123,25 @@ create policy "activities_delete_own_or_staff" on public.activities
   for delete to authenticated
   using (created_by = (select auth.uid()) or (select public.is_staff()));
 
+-- id, created_by and created_at can never be changed from the browser.
+revoke update on public.activities from anon, authenticated;
+grant update (name, description, address, lat, lng, photo_url, category, is_featured)
+  on public.activities to authenticated;
+
 -- ============================================================
 -- events: someone schedules an activity at a time
+-- creator_id becomes null if the creator's account is deleted (event is kept).
 -- ============================================================
 create table public.events (
   id uuid primary key default gen_random_uuid(),
   activity_id uuid not null references public.activities (id) on delete cascade,
-  creator_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  creator_id uuid default auth.uid() references auth.users (id) on delete set null,
   start_time timestamptz not null,
   end_time timestamptz not null,
   max_participants integer not null check (max_participants between 1 and 1000),
   created_at timestamptz not null default now(),
-  check (end_time > start_time)
+  check (end_time > start_time),
+  check (end_time <= start_time + interval '24 hours')
 );
 
 create index events_activity_id_idx on public.events (activity_id);
@@ -137,18 +154,53 @@ create policy "events_select_all" on public.events
   for select to anon, authenticated
   using (true);
 
+-- Creators can only schedule events from 5 minutes ago up to one year ahead.
 create policy "events_insert_own" on public.events
   for insert to authenticated
-  with check (creator_id = (select auth.uid()));
+  with check (
+    creator_id = (select auth.uid())
+    and start_time >= now() - interval '5 minutes'
+    and start_time <= now() + interval '1 year'
+  );
 
 create policy "events_update_own_or_staff" on public.events
   for update to authenticated
   using (creator_id = (select auth.uid()) or (select public.is_staff()))
-  with check (creator_id = (select auth.uid()) or (select public.is_staff()));
+  with check (
+    (
+      creator_id = (select auth.uid())
+      and start_time >= now() - interval '5 minutes'
+      and start_time <= now() + interval '1 year'
+    )
+    or (select public.is_staff())
+  );
 
 create policy "events_delete_own_or_staff" on public.events
   for delete to authenticated
   using (creator_id = (select auth.uid()) or (select public.is_staff()));
+
+-- id, activity_id, creator_id and created_at can never be changed from the browser.
+revoke update on public.events from anon, authenticated;
+grant update (start_time, end_time, max_participants) on public.events to authenticated;
+
+-- Max participants can never go below the number of people already joined.
+create function public.enforce_event_max_participants()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.max_participants < (
+    select count(*) from public.event_attendees where event_id = new.id
+  ) then
+    raise exception 'max_participants cannot be lower than the current attendee count';
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function public.enforce_event_max_participants() from public, anon, authenticated;
 
 -- ============================================================
 -- event_attendees: who joined which event (count = number of rows)
@@ -176,16 +228,27 @@ create policy "event_attendees_delete_own" on public.event_attendees
   for delete to authenticated
   using (user_id = (select auth.uid()));
 
--- Reject joins once an event is full (max_participants).
+-- Attendees are never edited: join or leave only.
+revoke update on public.event_attendees from anon, authenticated;
+
+-- Reject joins once an event is full. The event row is locked (FOR UPDATE) so two
+-- simultaneous joins cannot both take the last spot.
 create function public.enforce_event_capacity()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  max_allowed integer;
 begin
-  if (select count(*) from public.event_attendees where event_id = new.event_id)
-     >= (select max_participants from public.events where id = new.event_id) then
+  select max_participants into max_allowed
+  from public.events
+  where id = new.event_id
+  for update;
+
+  if max_allowed is not null
+     and (select count(*) from public.event_attendees where event_id = new.event_id) >= max_allowed then
     raise exception 'Event is full';
   end if;
   return new;
@@ -197,3 +260,7 @@ revoke execute on function public.enforce_event_capacity() from public, anon, au
 create trigger event_attendees_capacity
   before insert on public.event_attendees
   for each row execute function public.enforce_event_capacity();
+
+create trigger events_max_participants
+  before update of max_participants on public.events
+  for each row execute function public.enforce_event_max_participants();
