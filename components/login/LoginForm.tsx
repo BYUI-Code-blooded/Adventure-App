@@ -270,7 +270,7 @@ export default function LoginForm() {
             autoComplete="one-time-code"
             required
             maxLength={10}
-            placeholder="123456"
+            placeholder="12345678"
             value={code}
             onChange={(event) => setCode(event.target.value)}
             className={`mt-2 text-center text-2xl font-bold tracking-[0.4em] ${inputClass}`}
