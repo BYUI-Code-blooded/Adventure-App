@@ -213,11 +213,16 @@ export default function AdventureScene() {
           <text x="78" y="-45" textAnchor="middle" fontSize="13" fontWeight="700" className="fill-emerald-950">
             Henrys Fork
           </text>
-          <g strokeWidth="1.5" className="stroke-amber-50">
-            <circle cx="38" cy="-29" r="6" className="fill-amber-300" />
-            <circle cx="51" cy="-29" r="6" className="fill-emerald-700" />
-            <circle cx="64" cy="-29" r="6" className="fill-emerald-900" />
-          </g>
+          {[
+            { x: 38, fill: "fill-amber-300" },
+            { x: 51, fill: "fill-emerald-700" },
+            { x: 64, fill: "fill-emerald-900" },
+          ].map(({ x, fill }) => (
+            <g key={x} transform={`translate(${x} -23)`} strokeWidth="1" className={`${fill} stroke-amber-50`}>
+              <path d="M-6 0a6 5.5 0 0 1 12 0Z" />
+              <circle cy="-9.5" r="3.4" />
+            </g>
+          ))}
           <text x="76" y="-25" fontSize="11" fontWeight="600" className="fill-emerald-900">
             5 going
           </text>
