@@ -2,6 +2,7 @@
 
 // Site-wide navigation, rendered once in app/layout.tsx.
 // Mobile: top bar with the logo + fixed bottom tab bar. Desktop (md+): links move into the top bar.
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navLinks } from "@/components/icons";
@@ -22,6 +23,22 @@ function isActive(pathname: string, href: string) {
 
 export default function SiteNav() {
   const pathname = usePathname();
+  const [signedIn, setSignedIn] = useState(false);
+
+  // Loads the Supabase client lazily so a missing .env.local never breaks the other pages.
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    import("@/lib/supabase")
+      .then(({ supabase }) => {
+        supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+        const { data } = supabase.auth.onAuthStateChange((_event, session) =>
+          setSignedIn(Boolean(session)),
+        );
+        unsubscribe = () => data.subscription.unsubscribe();
+      })
+      .catch(() => {});
+    return () => unsubscribe?.();
+  }, []);
 
   return (
     <>
@@ -35,21 +52,30 @@ export default function SiteNav() {
               Rexburg <span className="text-amber-300">Adventures</span>
             </span>
           </Link>
-          <nav aria-label="Main" className="hidden md:block">
-            <ul className="flex gap-1">
-              {navLinks.map(({ href, label }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    aria-current={isActive(pathname, href) ? "page" : undefined}
-                    className="rounded-full px-4 py-2 text-sm font-medium hover:bg-emerald-800 aria-[current=page]:bg-amber-300 aria-[current=page]:text-emerald-950"
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <div className="flex items-center gap-1">
+            <nav aria-label="Main" className="hidden md:block">
+              <ul className="flex gap-1">
+                {navLinks.map(({ href, label }) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      aria-current={isActive(pathname, href) ? "page" : undefined}
+                      className="rounded-full px-4 py-2 text-sm font-medium hover:bg-emerald-800 aria-[current=page]:bg-amber-300 aria-[current=page]:text-emerald-950"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <Link
+              href="/login"
+              aria-current={isActive(pathname, "/login") ? "page" : undefined}
+              className="ml-2 rounded-full bg-amber-300 px-4 py-2 text-sm font-bold text-emerald-950 hover:bg-amber-200"
+            >
+              {signedIn ? "Account" : "Sign in"}
+            </Link>
+          </div>
         </div>
       </header>
 

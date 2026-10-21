@@ -7,6 +7,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 type Status = "idle" | "sending" | "sent" | "error";
+type Profile = { id: string; name: string | null; phone: string | null; role: string };
 
 const RESEND_SECONDS = 60;
 
@@ -31,7 +32,12 @@ const secondaryClass =
 export default function LoginForm() {
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
-  const [role, setRole] = useState<string | null>(null);
+  // The profile of the signed-in user (undefined while loading, null if the row is missing).
+  const [loaded, setLoaded] = useState<{ id: string; profile: Profile | null } | null>(null);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -52,11 +58,13 @@ export default function LoginForm() {
     if (!userId) return;
     supabase
       .from("profiles")
-      .select("role")
+      .select("id, name, phone, role")
       .eq("id", userId)
       .maybeSingle()
-      .then(({ data }) => setRole(data?.role ?? null));
+      .then(({ data }) => setLoaded({ id: userId, profile: data }));
   }, [userId]);
+
+  const profile = loaded && loaded.id === userId ? loaded.profile : undefined;
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -84,8 +92,89 @@ export default function LoginForm() {
     setCooldown(RESEND_SECONDS);
   }
 
+  async function saveProfile(event: FormEvent) {
+    event.preventDefault();
+    const cleanName = name.trim();
+    if (!cleanName || !userId || saving) return;
+    setSaving(true);
+    setSaveError("");
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ name: cleanName, phone: phone.trim() || null })
+      .eq("id", userId)
+      .select("id, name, phone, role")
+      .single();
+    setSaving(false);
+    if (error) {
+      setSaveError("We couldn't save your details. Please try again.");
+      return;
+    }
+    setLoaded({ id: userId, profile: data });
+  }
+
   if (checking) {
     return <p className="text-emerald-900/80">Checking your session…</p>;
+  }
+
+  if (session && profile === undefined) {
+    return <p className="text-emerald-900/80">Loading your profile…</p>;
+  }
+
+  if (session && profile && !profile.name) {
+    return (
+      <form onSubmit={saveProfile}>
+        <p className="text-sm font-semibold uppercase tracking-widest text-emerald-700">
+          One last step
+        </p>
+        <h1 className="mt-3 text-4xl font-extrabold leading-tight">What should we call you?</h1>
+        <p className="mt-4 text-emerald-900/80">
+          Your name shows up next to the events you organize. Your phone number is optional and
+          only you can see it.
+        </p>
+
+        <label htmlFor="name" className="mt-8 block text-sm font-bold">
+          Name
+        </label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          autoComplete="name"
+          required
+          maxLength={80}
+          placeholder="Your name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          className={`mt-2 ${inputClass}`}
+        />
+
+        <label htmlFor="phone" className="mt-5 block text-sm font-bold">
+          Phone <span className="font-normal text-emerald-900/80">(optional)</span>
+        </label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          minLength={5}
+          maxLength={30}
+          placeholder="(208) 555-0123"
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+          className={`mt-2 ${inputClass}`}
+        />
+
+        {saveError && (
+          <p role="alert" className="mt-4 rounded-2xl bg-amber-100 p-4 font-semibold">
+            {saveError}
+          </p>
+        )}
+
+        <button type="submit" className={`mt-6 ${primaryClass}`} disabled={saving}>
+          {saving ? "Saving…" : "Save and continue"}
+        </button>
+      </form>
+    );
   }
 
   if (session) {
@@ -94,10 +183,10 @@ export default function LoginForm() {
         <p className="text-sm font-semibold uppercase tracking-widest text-emerald-700">
           You&apos;re in
         </p>
-        <h1 className="mt-3 text-4xl font-extrabold leading-tight">Welcome back.</h1>
+        <h1 className="mt-3 text-4xl font-extrabold leading-tight">Welcome back{profile?.name ? `, ${profile.name}` : ""}.</h1>
         <p className="mt-4 text-emerald-900/80">
           Signed in as <span className="font-bold text-emerald-950">{session.user.email}</span>
-          {role && role !== "user" ? <> · {role}</> : null}
+          {profile && profile.role !== "user" ? <> · {profile.role}</> : null}
         </p>
         <div className="mt-8 flex flex-col gap-3">
           <Link href="/map" className={primaryClass}>
