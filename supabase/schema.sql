@@ -9,7 +9,7 @@ create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   name text check (name is null or char_length(name) between 1 and 80),
   phone text check (phone is null or char_length(phone) between 5 and 30),
-  role text not null default 'user' check (role in ('user', 'admin')),
+  role text not null default 'user' check (role in ('user', 'developer', 'admin')),
   created_at timestamptz not null default now()
 );
 
@@ -53,8 +53,8 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- Helper used by policies: is the current user an admin?
-create function public.is_admin()
+-- Helper used by policies: is the current user staff (admin or developer)?
+create function public.is_staff()
 returns boolean
 language sql
 stable
@@ -63,7 +63,7 @@ set search_path = ''
 as $$
   select exists (
     select 1 from public.profiles
-    where id = (select auth.uid()) and role = 'admin'
+    where id = (select auth.uid()) and role in ('admin', 'developer')
   );
 $$;
 
@@ -93,25 +93,25 @@ create policy "activities_select_all" on public.activities
   for select to anon, authenticated
   using (true);
 
--- Only admins can mark an activity as featured.
+-- Only staff (admin or developer) can mark an activity as featured.
 create policy "activities_insert_own" on public.activities
   for insert to authenticated
   with check (
     created_by = (select auth.uid())
-    and (is_featured = false or (select public.is_admin()))
+    and (is_featured = false or (select public.is_staff()))
   );
 
-create policy "activities_update_own_or_admin" on public.activities
+create policy "activities_update_own_or_staff" on public.activities
   for update to authenticated
-  using (created_by = (select auth.uid()) or (select public.is_admin()))
+  using (created_by = (select auth.uid()) or (select public.is_staff()))
   with check (
     (created_by = (select auth.uid()) and is_featured = false)
-    or (select public.is_admin())
+    or (select public.is_staff())
   );
 
-create policy "activities_delete_own_or_admin" on public.activities
+create policy "activities_delete_own_or_staff" on public.activities
   for delete to authenticated
-  using (created_by = (select auth.uid()) or (select public.is_admin()));
+  using (created_by = (select auth.uid()) or (select public.is_staff()));
 
 -- ============================================================
 -- events: someone schedules an activity at a time
@@ -141,14 +141,14 @@ create policy "events_insert_own" on public.events
   for insert to authenticated
   with check (creator_id = (select auth.uid()));
 
-create policy "events_update_own_or_admin" on public.events
+create policy "events_update_own_or_staff" on public.events
   for update to authenticated
-  using (creator_id = (select auth.uid()) or (select public.is_admin()))
-  with check (creator_id = (select auth.uid()) or (select public.is_admin()));
+  using (creator_id = (select auth.uid()) or (select public.is_staff()))
+  with check (creator_id = (select auth.uid()) or (select public.is_staff()));
 
-create policy "events_delete_own_or_admin" on public.events
+create policy "events_delete_own_or_staff" on public.events
   for delete to authenticated
-  using (creator_id = (select auth.uid()) or (select public.is_admin()));
+  using (creator_id = (select auth.uid()) or (select public.is_staff()));
 
 -- ============================================================
 -- event_attendees: who joined which event (count = number of rows)
