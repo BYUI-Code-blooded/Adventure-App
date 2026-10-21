@@ -39,7 +39,17 @@ create view public.public_profiles as
 revoke all on public.public_profiles from public, anon, authenticated;
 grant select on public.public_profiles to anon, authenticated;
 
--- Create the profile automatically when a user signs up.
+-- Emails that get a staff role automatically when they sign up (managed in the
+-- Supabase SQL Editor, never from the browser; the rows are NOT stored in git).
+create table public.role_assignments (
+  email text primary key check (email = lower(email)),
+  role text not null check (role in ('developer', 'admin'))
+);
+
+alter table public.role_assignments enable row level security;
+revoke all on public.role_assignments from public, anon, authenticated;
+
+-- Create the profile automatically when a user signs up (role from role_assignments, else 'user').
 create function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -47,7 +57,14 @@ security definer
 set search_path = ''
 as $$
 begin
-  insert into public.profiles (id) values (new.id);
+  insert into public.profiles (id, role)
+  values (
+    new.id,
+    coalesce(
+      (select ra.role from public.role_assignments ra where ra.email = lower(new.email)),
+      'user'
+    )
+  );
   return new;
 end;
 $$;
