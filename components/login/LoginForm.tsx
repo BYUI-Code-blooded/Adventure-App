@@ -55,6 +55,9 @@ export default function LoginForm() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [linkError, setLinkError] = useState("");
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [codeError, setCodeError] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -137,6 +140,22 @@ export default function LoginForm() {
       return;
     }
     setLoaded({ id: userId, profile: data });
+  }
+
+  // Signing in with the code from the email also works when an email scanner has already opened the link.
+  async function verifyCode(event: FormEvent) {
+    event.preventDefault();
+    const token = code.replace(/\s/g, "");
+    if (!token || verifying) return;
+    setVerifying(true);
+    setCodeError("");
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+    setVerifying(false);
+    if (error) {
+      setCodeError("That code is wrong or has expired. Check it, or send a new one.");
+      return;
+    }
+    setCode("");
   }
 
   if (checking) {
@@ -231,17 +250,44 @@ export default function LoginForm() {
     return (
       <div>
         <p className="text-sm font-semibold uppercase tracking-widest text-emerald-700">
-          Link on its way
+          Code on its way
         </p>
         <h1 className="mt-3 text-4xl font-extrabold leading-tight">Check your inbox.</h1>
         <p className="mt-4 text-emerald-900/80" role="status">
-          We sent a sign-in link to <span className="font-bold text-emerald-950">{email}</span>.
-          Open it on this device and you&apos;ll land back here, signed in. If you can&apos;t see
-          it, check your spam folder.
+          We sent a sign-in code to <span className="font-bold text-emerald-950">{email}</span>.
+          Type it below. If you can&apos;t see the email, check your spam folder.
         </p>
-        <div className="mt-8 flex flex-col gap-3">
-          <button type="button" className={primaryClass} onClick={() => sendLink()} disabled={cooldown > 0}>
-            {cooldown > 0 ? `Send again in ${cooldown}s` : "Send the link again"}
+
+        <form onSubmit={verifyCode} className="mt-8">
+          <label htmlFor="code" className="block text-sm font-bold">
+            Code
+          </label>
+          <input
+            id="code"
+            name="code"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            maxLength={10}
+            placeholder="123456"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            className={`mt-2 text-center text-2xl font-bold tracking-[0.4em] ${inputClass}`}
+          />
+          {codeError && (
+            <p role="alert" className="mt-4 rounded-2xl bg-amber-100 p-4 font-semibold">
+              {codeError}
+            </p>
+          )}
+          <button type="submit" className={`mt-4 ${primaryClass}`} disabled={verifying}>
+            {verifying ? "Checking…" : "Sign in"}
+          </button>
+        </form>
+
+        <div className="mt-6 flex flex-col gap-3">
+          <button type="button" className={secondaryClass} onClick={() => sendLink()} disabled={cooldown > 0}>
+            {cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}
           </button>
           <button
             type="button"
@@ -265,7 +311,7 @@ export default function LoginForm() {
       </p>
       <h1 className="mt-3 text-4xl font-extrabold leading-tight">Sign in to plan outings.</h1>
       <p className="mt-4 text-emerald-900/80">
-        Enter your email and we&apos;ll send you a link. No password to remember. New here? Your
+        Enter your email and we&apos;ll send you a code. No password to remember. New here? Your
         account is created the first time you sign in.
       </p>
 
@@ -292,7 +338,7 @@ export default function LoginForm() {
       )}
 
       <button type="submit" className={`mt-6 ${primaryClass}`} disabled={status === "sending"}>
-        {status === "sending" ? "Sending…" : "Email me a link"}
+        {status === "sending" ? "Sending…" : "Email me a code"}
       </button>
     </form>
   );
