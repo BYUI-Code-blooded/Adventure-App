@@ -22,10 +22,6 @@ export default function LoginPage() {
               Every adventure starts with a pin.
             </h2>
           </div>
-          <p className="pointer-events-none absolute bottom-20 left-6 z-10 text-sm font-medium text-emerald-100/80 md:bottom-6 md:left-12">
-            <span className="md:hidden">Tap the map to drop a pin.</span>
-            <span className="hidden md:inline">Click the map to drop a pin.</span>
-          </p>
         </section>
 
         {/* On phones the form is a card that slides up over the bottom of the scene */}
