@@ -181,14 +181,6 @@ export default function AdventureScene() {
             />
           </g>
           <g className="adv-dot">
-            <animateMotion
-              dur="9s"
-              repeatCount="indefinite"
-              calcMode="linear"
-              keyPoints="0;0;1;1"
-              keyTimes="0;0.067;0.6;1"
-              path={ROUTE}
-            />
             <circle r="13" className="adv-dot-pulse fill-amber-300" opacity="0.35" />
             <circle r="6" className="fill-amber-50" />
           </g>
