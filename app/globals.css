@@ -175,3 +175,70 @@ body {
     display: none;
   }
 }
+
+/* ---- Login scene: mouse interaction ---- */
+.adv-interactive {
+  /* A pin as the cursor (tip at the bottom). Falls back to a crosshair. */
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='36' viewBox='-14 -34 28 36'%3E%3Cpath d='M0 0C-9-14-14-20-14-27a14 14 0 1 1 28 0C14-20 9-14 0 0Z' fill='%23fcd34d' stroke='%23064e3b' stroke-width='2'/%3E%3Ccircle cy='-27' r='5' fill='%23064e3b'/%3E%3C/svg%3E") 14 34, crosshair;
+}
+
+/* Parallax: --mx / --my (-1..1) are set on the svg while the mouse moves, --k is the layer depth. */
+.adv-parallax {
+  transform: translate(calc(var(--mx, 0) * var(--k, 0) * 1px), calc(var(--my, 0) * var(--k, 0) * 1px));
+  transition: transform 0.45s ease-out;
+}
+
+/* Hovering a story pin or its label lifts the pin and lights the label. */
+.adv-lift {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.adv-hover:hover .adv-lift {
+  transform: translateY(-8px) scale(1.12);
+}
+.adv-chip-bg {
+  transition: fill 0.2s;
+}
+.adv-hover:hover .adv-chip-bg {
+  fill: #fcd34d;
+}
+
+/* Pins dropped by the visitor: drop in, bounce, ripple, then fade out. */
+.adv-user-pin {
+  animation: adv-user-out 0.7s ease-in var(--life) forwards;
+}
+@keyframes adv-user-out {
+  to { opacity: 0; }
+}
+.adv-user-body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: adv-user-drop 0.9s linear;
+}
+@keyframes adv-user-drop {
+  0% { transform: translateY(-150px) scale(0.6); opacity: 0; animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6); }
+  25% { transform: translateY(-150px) scale(1); opacity: 1; }
+  50% { transform: translateY(0) scale(1.14, 0.84); animation-timing-function: ease-out; }
+  68% { transform: translateY(-14px) scale(0.96, 1.06); animation-timing-function: ease-in; }
+  84% { transform: translateY(0) scale(1.05, 0.96); animation-timing-function: ease-out; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.adv-user-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: adv-ripple 1.8s ease-out 0.35s 2;
+}
+.adv-user-ripple-late { animation-delay: 1s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .adv-parallax,
+  .adv-lift,
+  .adv-user-body,
+  .adv-user-ripple {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
