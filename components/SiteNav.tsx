@@ -30,7 +30,6 @@ export default function SiteNav() {
     let unsubscribe: (() => void) | undefined;
     import("@/lib/supabase")
       .then(({ supabase }) => {
-        supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
         const { data } = supabase.auth.onAuthStateChange((_event, session) =>
           setSignedIn(Boolean(session)),
         );

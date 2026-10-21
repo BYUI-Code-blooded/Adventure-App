@@ -26,125 +26,143 @@ body {
 }
 
 /* ---- Login page scene (components/login/AdventureScene.tsx) ---- */
-.adv-scene {
-  color: var(--color-amber-100);
+/* One 9s loop: contours draw in, a route is drawn while a dot travels it, pins pop up, then it all fades and restarts. */
+.adv-contour {
+  stroke-dasharray: 1;
+  opacity: 0.9;
+  animation: adv-contour-draw 1.8s cubic-bezier(0.3, 0.6, 0.2, 1) backwards;
+}
+@keyframes adv-contour-draw {
+  from { stroke-dashoffset: 1; opacity: 0; }
 }
 
-.adv-layer {
-  animation: adv-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
-}
-.adv-layer-1 { animation-delay: 0.1s; }
-.adv-layer-2 { animation-delay: 0.25s; }
-.adv-layer-3 { animation-delay: 0.4s; }
-
-@keyframes adv-rise {
-  from { transform: translateY(40px); opacity: 0; }
-}
-
-.adv-sun {
-  transform: translate(520px, 110px);
-  animation: adv-sun-up 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
-}
-@keyframes adv-sun-up {
-  from { transform: translate(520px, 220px); opacity: 0; }
-}
-.adv-rays {
+.adv-drift {
   transform-box: fill-box;
   transform-origin: center;
-  animation: adv-spin 40s linear infinite;
+  animation: adv-drift 26s ease-in-out infinite alternate;
 }
-@keyframes adv-spin {
-  to { transform: rotate(360deg); }
-}
-
-.adv-cloud { animation: adv-drift 22s ease-in-out infinite alternate; }
-.adv-cloud-slow { animation-duration: 32s; }
+.adv-drift-b { animation-duration: 32s; animation-direction: alternate-reverse; }
+.adv-drift-c { animation-duration: 38s; }
 @keyframes adv-drift {
-  from { transform: translateX(-30px); }
-  to { transform: translateX(40px); }
+  from { transform: rotate(-2.5deg) scale(1); }
+  to { transform: rotate(2.5deg) scale(1.03); }
 }
 
-.adv-bird { animation: adv-fly 24s linear infinite; }
-.adv-bird-late { animation-delay: -12s; }
-@keyframes adv-fly {
-  from { transform: translate(-60px, 150px); }
-  50% { transform: translate(400px, 128px); }
-  to { transform: translate(860px, 156px); }
-}
-
-.adv-tree {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: adv-sway 4.5s ease-in-out infinite alternate;
-}
-.adv-tree-b { animation-delay: -1.5s; animation-duration: 5.5s; }
-.adv-tree-c { animation-delay: -3s; animation-duration: 4s; }
-@keyframes adv-sway {
-  from { transform: rotate(-1.8deg); }
-  to { transform: rotate(1.8deg); }
-}
-
-.adv-flame {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: adv-flicker 0.9s ease-in-out infinite alternate;
-}
-@keyframes adv-flicker {
-  from { transform: scale(1, 1); }
-  to { transform: scale(0.85, 1.18); }
-}
-
-/* One 9s loop: the trail draws, the pin drops and bounces, then everything fades and restarts. */
-.adv-trail-reveal {
+.adv-route-reveal {
   stroke-dasharray: 1;
-  animation: adv-trail-draw 9s ease-in-out infinite;
+  animation: adv-route-draw 9s linear infinite;
 }
-@keyframes adv-trail-draw {
-  0%, 4% { stroke-dashoffset: 1; }
-  40%, 100% { stroke-dashoffset: 0; }
+@keyframes adv-route-draw {
+  0%, 6.7% { stroke-dashoffset: 1; }
+  60%, 100% { stroke-dashoffset: 0; }
 }
 
-.adv-trail-group {
-  animation: adv-cycle-fade 9s linear infinite;
+.adv-route-group {
+  animation: adv-fade-out 9s linear infinite;
 }
-@keyframes adv-cycle-fade {
+@keyframes adv-fade-out {
   0%, 90% { opacity: 1; }
   98%, 100% { opacity: 0; }
 }
 
-.adv-pin-group {
-  animation: adv-pin-group-fade 9s linear infinite;
+.adv-dot-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: adv-dot-pulse 1.4s ease-out infinite;
 }
-@keyframes adv-pin-group-fade {
-  0%, 36% { opacity: 0; }
-  38%, 90% { opacity: 1; }
-  98%, 100% { opacity: 0; }
-}
-
-.adv-pin {
-  animation: adv-pin-drop 9s linear infinite;
-}
-@keyframes adv-pin-drop {
-  0%, 36% { transform: translateY(-260px); opacity: 0; }
-  38% { opacity: 1; }
-  44% { transform: translateY(0); animation-timing-function: ease-out; }
-  48% { transform: translateY(-26px); animation-timing-function: ease-in; }
-  52% { transform: translateY(0); animation-timing-function: ease-out; }
-  54.5% { transform: translateY(-9px); animation-timing-function: ease-in; }
-  57%, 100% { transform: translateY(0); opacity: 1; }
+@keyframes adv-dot-pulse {
+  from { transform: scale(0.6); opacity: 0.6; }
+  to { transform: scale(1.8); opacity: 0; }
 }
 
+.adv-pop {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
 .adv-ripple {
   transform-box: fill-box;
   transform-origin: center;
-  opacity: 0;
-  animation: adv-ripple 2.6s ease-out infinite;
-  animation-delay: 4s;
+  animation: adv-ripple 2.4s ease-out infinite;
 }
-.adv-ripple-late { animation-delay: 5.3s; }
+.adv-ripple-late { animation-delay: 1.2s; }
 @keyframes adv-ripple {
-  from { transform: scale(0.3); opacity: 0.9; }
-  to { transform: scale(2.8); opacity: 0; }
+  from { transform: scale(0.4); opacity: 0.9; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+
+.adv-pop-1 { animation: adv-pop-1 9s linear infinite; }
+@keyframes adv-pop-1 {
+  0%, 21.4% { transform: translateY(-34px) scale(0.3); opacity: 0; }
+  21.8% { transform: translateY(-34px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6); }
+  23.2% { transform: translateY(0) scale(1.14, 0.84); animation-timing-function: ease-out; }
+  24.4% { transform: translateY(-12px) scale(0.96, 1.06); animation-timing-function: ease-in; }
+  25.6% { transform: translateY(0) scale(1.05, 0.96); animation-timing-function: ease-out; }
+  26.8%, 90% { transform: translateY(0) scale(1); opacity: 1; }
+  98%, 100% { transform: translateY(0) scale(1); opacity: 0; }
+}
+
+.adv-show-1 { animation: adv-show-1 9s linear infinite; }
+@keyframes adv-show-1 {
+  0%, 22.8% { opacity: 0; }
+  23.4%, 90% { opacity: 1; }
+  98%, 100% { opacity: 0; }
+}
+
+.adv-chip-1 { animation: adv-chip-1 9s linear infinite; }
+@keyframes adv-chip-1 {
+  0%, 24.8% { transform: translateY(8px); opacity: 0; }
+  27.3%, 90% { transform: translateY(0); opacity: 1; }
+  98%, 100% { transform: translateY(0); opacity: 0; }
+}
+
+.adv-pop-2 { animation: adv-pop-2 9s linear infinite; }
+@keyframes adv-pop-2 {
+  0%, 48.8% { transform: translateY(-34px) scale(0.3); opacity: 0; }
+  49.2% { transform: translateY(-34px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6); }
+  50.6% { transform: translateY(0) scale(1.14, 0.84); animation-timing-function: ease-out; }
+  51.8% { transform: translateY(-12px) scale(0.96, 1.06); animation-timing-function: ease-in; }
+  53.0% { transform: translateY(0) scale(1.05, 0.96); animation-timing-function: ease-out; }
+  54.2%, 90% { transform: translateY(0) scale(1); opacity: 1; }
+  98%, 100% { transform: translateY(0) scale(1); opacity: 0; }
+}
+
+.adv-show-2 { animation: adv-show-2 9s linear infinite; }
+@keyframes adv-show-2 {
+  0%, 50.2% { opacity: 0; }
+  50.8%, 90% { opacity: 1; }
+  98%, 100% { opacity: 0; }
+}
+
+.adv-chip-2 { animation: adv-chip-2 9s linear infinite; }
+@keyframes adv-chip-2 {
+  0%, 52.2% { transform: translateY(8px); opacity: 0; }
+  54.7%, 90% { transform: translateY(0); opacity: 1; }
+  98%, 100% { transform: translateY(0); opacity: 0; }
+}
+
+.adv-pop-3 { animation: adv-pop-3 9s linear infinite; }
+@keyframes adv-pop-3 {
+  0%, 59.6% { transform: translateY(-34px) scale(0.3); opacity: 0; }
+  60.0% { transform: translateY(-34px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6); }
+  61.4% { transform: translateY(0) scale(1.14, 0.84); animation-timing-function: ease-out; }
+  62.6% { transform: translateY(-12px) scale(0.96, 1.06); animation-timing-function: ease-in; }
+  63.8% { transform: translateY(0) scale(1.05, 0.96); animation-timing-function: ease-out; }
+  65.0%, 90% { transform: translateY(0) scale(1); opacity: 1; }
+  98%, 100% { transform: translateY(0) scale(1); opacity: 0; }
+}
+
+.adv-show-3 { animation: adv-show-3 9s linear infinite; }
+@keyframes adv-show-3 {
+  0%, 61.0% { opacity: 0; }
+  61.6%, 90% { opacity: 1; }
+  98%, 100% { opacity: 0; }
+}
+
+.adv-chip-3 { animation: adv-chip-3 9s linear infinite; }
+@keyframes adv-chip-3 {
+  0%, 63.0% { transform: translateY(8px); opacity: 0; }
+  65.5%, 90% { transform: translateY(0); opacity: 1; }
+  98%, 100% { transform: translateY(0); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -152,5 +170,8 @@ body {
   .adv-scene {
     animation: none !important;
   }
-  .adv-ripple { opacity: 0; }
+  .adv-ripple,
+  .adv-dot {
+    display: none;
+  }
 }

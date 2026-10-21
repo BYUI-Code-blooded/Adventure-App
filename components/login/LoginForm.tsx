@@ -45,12 +45,17 @@ export default function LoginForm() {
 
   // Picks up the session when the magic link brings you back to this page.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setChecking(false);
+    // INITIAL_SESSION fires once the stored session (or the magic link in the URL) is read.
+    // The timeout is a safety net so the form always shows up.
+    const { data } = supabase.auth.onAuthStateChange((event, next) => {
+      setSession(next);
+      if (event === "INITIAL_SESSION") setChecking(false);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
-    return () => data.subscription.unsubscribe();
+    const timer = setTimeout(() => setChecking(false), 4000);
+    return () => {
+      clearTimeout(timer);
+      data.subscription.unsubscribe();
+    };
   }, []);
 
   const userId = session?.user.id;
