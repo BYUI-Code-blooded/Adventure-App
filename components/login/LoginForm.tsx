@@ -11,6 +11,22 @@ type Profile = { id: string; name: string | null; phone: string | null; role: st
 
 const RESEND_SECONDS = 60;
 
+// Read at import time, before supabase-js clears the URL, so a failed magic link can be explained.
+const landingParams =
+  typeof window === "undefined"
+    ? null
+    : new URLSearchParams(window.location.hash.replace(/^#/, "") || window.location.search);
+const landingError = landingParams?.get("error_description") ?? landingParams?.get("error") ?? null;
+const landingErrorCode = landingParams?.get("error_code") ?? null;
+
+function linkErrorMessage() {
+  if (!landingError) return "";
+  if (landingErrorCode === "otp_expired") {
+    return "That link expired or was already used. Some email apps open links automatically, which uses them up. Request a new one and open it right away.";
+  }
+  return `The sign-in link didn't work (${landingError.replace(/\+/g, " ")}). Request a new one.`;
+}
+
 function friendlyError(message: string, status?: number) {
   const text = message.toLowerCase();
   if (text.includes("not authorized")) {
@@ -38,6 +54,7 @@ export default function LoginForm() {
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [linkError, setLinkError] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -70,6 +87,11 @@ export default function LoginForm() {
   }, [userId]);
 
   const profile = loaded && loaded.id === userId ? loaded.profile : undefined;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLinkError(linkErrorMessage()), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -263,9 +285,9 @@ export default function LoginForm() {
         className={`mt-2 ${inputClass}`}
       />
 
-      {status === "error" && (
+      {(status === "error" || linkError) && (
         <p role="alert" className="mt-4 rounded-2xl bg-amber-100 p-4 font-semibold">
-          {message}
+          {status === "error" ? message : linkError}
         </p>
       )}
 
