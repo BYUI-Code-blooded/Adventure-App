@@ -109,7 +109,7 @@ export default function AdventureScene() {
       viewBox="0 0 600 700"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden="true"
-      className="adv-scene adv-interactive absolute inset-0 h-full w-full"
+      className="adv-scene absolute inset-0 h-full w-full"
       onPointerMove={handleMove}
       onPointerLeave={handleLeave}
       onPointerDown={handleDrop}
