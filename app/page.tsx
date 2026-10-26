@@ -77,6 +77,37 @@ export default function HomePage() {
           </svg>
         </section>
 
+        <section className="bg-emerald-100/60">
+          <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
+            <h2 className="text-2xl font-extrabold md:text-3xl">
+              Pick your kind of adventure
+            </h2>
+            <p className="mt-3 max-w-xl text-emerald-900/80">
+              Find a cozy indoor plan or get out and explore the places around Rexburg.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <Link
+                href="/indoor"
+                className="rounded-2xl bg-amber-50 p-6 shadow-sm hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700"
+              >
+                <h3 className="text-lg font-bold">Indoor Activities</h3>
+                <p className="mt-2 text-emerald-900/80">
+                  Find a warm place to unwind, get creative, or have fun with friends.
+                </p>
+              </Link>
+              <Link
+                href="/outdoor"
+                className="rounded-2xl bg-amber-50 p-6 shadow-sm hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700"
+              >
+                <h3 className="text-lg font-bold">Outdoor Activities</h3>
+                <p className="mt-2 text-emerald-900/80">
+                  Explore local parks, rivers, and wide-open Idaho scenery.
+                </p>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* What is this */}
         <section className="mx-auto max-w-6xl px-4 py-12 md:py-16">
           <div className="grid gap-8 md:grid-cols-2 md:items-center">
