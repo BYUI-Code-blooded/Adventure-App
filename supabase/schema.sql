@@ -103,8 +103,9 @@ create table public.activities (
   description text check (description is null or char_length(description) <= 1000),
   address text check (address is null or char_length(address) <= 200),
   lat double precision not null check (lat between -90 and 90),
-  lng double precision not null check (lng between -180 and 180),
+  lon double precision not null check (lon between -180 and 180),
   photo_url text check (photo_url is null or (photo_url ~ '^https://' and char_length(photo_url) <= 500)),
+  website_url text,
   category text not null check (category in ('outdoor', 'indoor', 'food', 'weekend')),
   is_featured boolean not null default false,
   created_by uuid default auth.uid() references auth.users (id) on delete set null,
@@ -142,7 +143,7 @@ create policy "activities_delete_own_or_staff" on public.activities
 
 -- id, created_by and created_at can never be changed from the browser.
 revoke update on public.activities from anon, authenticated;
-grant update (name, description, address, lat, lng, photo_url, category, is_featured)
+grant update (name, description, address, lat, lon, photo_url, website_url, category, is_featured)
   on public.activities to authenticated;
 
 -- ============================================================

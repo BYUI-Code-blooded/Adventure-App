@@ -25,6 +25,7 @@ Static content pages (Home, Outdoor, Indoor, Food & Treats, Weekend Events, Abou
 - Never commit secrets or `.env.local`.
 - Tailwind only. Custom CSS only in `app/globals.css`.
 - Do not change files unrelated to the task.
+- For coordinates, use `lon` everywhere in new code; do not introduce new `lng` usage. The existing legacy `lng` compatibility fallback should be removed at a future cleanup date once older data/code no longer requires it.
 - Never run `git push --force`.
 - Do not merge or push unless the user asks you to.
 
