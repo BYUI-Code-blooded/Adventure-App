@@ -63,7 +63,7 @@ export default function SiteNav() {
     };
   }, [userId]);
 
-  const staff = staffCheck?.id === userId && staffCheck.staff;
+  const staff = staffCheck?.id === userId && staffCheck?.staff === true;
 
   // Members with a real account can suggest ideas. Staff can also review them.
   const links = [
