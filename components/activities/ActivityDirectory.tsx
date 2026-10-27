@@ -24,6 +24,7 @@ export default function ActivityDirectory({ category }: { category: ActivityCate
           .from("activities")
           .select("*")
           .eq("category", category)
+          .eq("status", "approved")
           .order("is_featured", { ascending: false })
           .order("name", { ascending: true });
 

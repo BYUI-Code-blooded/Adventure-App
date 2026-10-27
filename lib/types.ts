@@ -4,6 +4,9 @@ export type Role = "user" | "developer" | "admin";
 
 export type ActivityCategory = "indoor" | "outdoor" | "food" | "weekend";
 
+// Review state of an activity: users suggest ideas as "pending"; staff approve or reject them.
+export type ActivityStatus = "pending" | "approved" | "rejected";
+
 export type Activity = {
   id: string;
   name: string;
@@ -23,6 +26,9 @@ export type Activity = {
   google_maps_url?: string | null;
   google_rating_checked_at?: string | null;
   walkable_from_campus?: boolean | null;
+  status?: ActivityStatus;
+  rejection_reason?: string | null;
+  reviewed_at?: string | null;
 };
 
 // A row of public.profiles (the email lives in the Supabase auth user, not here).

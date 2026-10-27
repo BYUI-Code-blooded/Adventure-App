@@ -45,7 +45,8 @@ create policy "activities_select_visible" on public.activities
     or (select public.is_staff())
   );
 
--- Staff can publish directly. Everyone else can only submit a pending, non-featured idea near Rexburg.
+-- Staff can publish directly. Everyone else (with a real, non-anonymous account) can only submit a
+-- pending, non-featured idea within 300 km of Rexburg.
 create policy "activities_insert_own" on public.activities
   for insert to authenticated
   with check (
@@ -53,7 +54,8 @@ create policy "activities_insert_own" on public.activities
     and (
       (select public.is_staff())
       or (
-        status = 'pending'
+        coalesce((select auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+        and status = 'pending'
         and is_featured = false
         and reviewed_by is null
         and reviewed_at is null

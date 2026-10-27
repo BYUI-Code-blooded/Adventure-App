@@ -39,6 +39,7 @@ export default function MapView() {
       const { data, error: queryError } = await supabase
         .from("activities")
         .select("id, name, description, address, lat, lon, website_url, category, is_featured")
+        .eq("status", "approved")
         .order("is_featured", { ascending: false })
         .order("name", { ascending: true });
 
