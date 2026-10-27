@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navLinks } from "@/components/icons";
+import { IdeaIcon, UsersIcon, navLinks } from "@/components/icons";
 
 function LogoSlot() {
   return (
@@ -27,7 +27,9 @@ function isActive(pathname: string, href: string) {
 
 export default function SiteNav() {
   const pathname = usePathname();
-  const [signedIn, setSignedIn] = useState(false);
+  const [user, setUser] = useState<{ id: string; anonymous: boolean } | null>(null);
+  const [staffCheck, setStaffCheck] = useState<{ id: string; staff: boolean } | null>(null);
+  const signedIn = user !== null;
 
   // Loads the Supabase client lazily so a missing .env.local never breaks the other pages.
   useEffect(() => {
@@ -35,13 +37,40 @@ export default function SiteNav() {
     import("@/lib/supabase")
       .then(({ supabase }) => {
         const { data } = supabase.auth.onAuthStateChange((_event, session) =>
-          setSignedIn(Boolean(session)),
+          setUser(session ? { id: session.user.id, anonymous: Boolean(session.user.is_anonymous) } : null),
         );
         unsubscribe = () => data.subscription.unsubscribe();
       })
       .catch(() => {});
     return () => unsubscribe?.();
   }, []);
+
+  // Staff (admin or developer) get a "Review" link. Looked up outside the auth callback on purpose.
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    import("@/lib/supabase")
+      .then(({ supabase }) =>
+        supabase.from("profiles").select("role").eq("id", userId).maybeSingle(),
+      )
+      .then(({ data }) => {
+        if (active) setStaffCheck({ id: userId, staff: data?.role === "admin" || data?.role === "developer" });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+  const staff = staffCheck?.id === userId && staffCheck.staff;
+
+  // Members with a real account can suggest ideas. Staff can also review them.
+  const links = [
+    ...navLinks,
+    ...(user && !user.anonymous ? [{ href: "/submit-ideas", label: "Suggest", Icon: IdeaIcon }] : []),
+    ...(user && !user.anonymous && staff ? [{ href: "/admin", label: "Review", Icon: UsersIcon }] : []),
+  ];
 
   return (
     <>
@@ -54,7 +83,7 @@ export default function SiteNav() {
           <div className="flex items-center gap-1">
             <nav aria-label="Main" className="hidden md:block">
               <ul className="flex gap-1">
-                {navLinks.map(({ href, label }) => (
+                {links.map(({ href, label }) => (
                   <li key={href}>
                     <Link
                       href={href}
@@ -82,8 +111,8 @@ export default function SiteNav() {
         aria-label="Main"
         className="fixed inset-x-0 bottom-0 z-[1100] border-t border-emerald-800 bg-emerald-900 pb-[env(safe-area-inset-bottom)] text-emerald-200 md:hidden"
       >
-        <ul className="grid grid-cols-4">
-          {navLinks.map(({ href, label, Icon }) => (
+        <ul className="grid grid-flow-col auto-cols-fr">
+          {links.map(({ href, label, Icon }) => (
             <li key={href}>
               <Link
                 href={href}
