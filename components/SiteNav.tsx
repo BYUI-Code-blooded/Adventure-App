@@ -7,12 +7,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navLinks } from "@/components/icons";
 
-// Placeholder logo until the team has a real one.
 function LogoSlot() {
   return (
-    <div className="grid size-10 place-items-center rounded-lg border-2 border-dashed border-amber-200/60 text-[10px] font-bold tracking-wider text-amber-100">
-      LOGO
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/adventure-app-brand-horizontal.png"
+      alt="Rexburg Adventures"
+      width={288}
+      height={96}
+      className="h-14 w-auto max-w-[58vw] rounded-lg bg-amber-50 px-2 py-1 object-contain md:h-20 md:max-w-[18rem]"
+    />
   );
 }
 
@@ -43,13 +47,9 @@ export default function SiteNav() {
     <>
       {/* z-[1100] keeps the header and bottom bar above Leaflet's map panes and controls (z-index up to 1000) on /map. */}
       <header className="sticky top-0 z-[1100] bg-emerald-900 text-amber-50">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-3">
+        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 md:h-24">
+          <Link href="/" aria-label="Rexburg Adventures home" className="flex shrink-0 items-center">
             <LogoSlot />
-            {/* Placeholder site name */}
-            <span className="font-bold leading-tight">
-              Rexburg <span className="text-amber-300">Adventures</span>
-            </span>
           </Link>
           <div className="flex items-center gap-1">
             <nav aria-label="Main" className="hidden md:block">
