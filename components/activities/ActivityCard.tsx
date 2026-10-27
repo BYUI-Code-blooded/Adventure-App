@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getFoodOpenStatus } from "@/lib/food-hours";
 import type { Activity } from "@/lib/types";
 
 function safeWebsiteUrl(value?: string | null) {
@@ -12,6 +13,55 @@ function safeWebsiteUrl(value?: string | null) {
   } catch {
     return undefined;
   }
+}
+
+function useFoodOpenStatus(hours: Activity["weekly_hours"]) {
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const update = () => setNow(new Date());
+    update();
+    const interval = window.setInterval(update, 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return getFoodOpenStatus(hours, now);
+}
+
+function FoodDetails({ activity }: { activity: Activity }) {
+  const status = useFoodOpenStatus(activity.weekly_hours);
+  const mapsUrl = safeWebsiteUrl(activity.google_maps_url);
+  const checkedAt = activity.google_rating_checked_at
+    ? new Date(`${activity.google_rating_checked_at}T12:00:00`).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    : null;
+
+  return (
+    <div className="mt-4 space-y-2 rounded-xl border border-emerald-900/10 bg-white/70 p-4 text-sm">
+      <p className={status.open === true ? "font-bold text-emerald-700" : "font-semibold text-stone-600"}>
+        <span aria-hidden="true">{status.open === true ? "●" : status.open === false ? "●" : "◷"}</span>{" "}{status.label}
+      </p>
+      <p className="text-emerald-950">
+        <span className="font-semibold">Delivery: </span>
+        {activity.delivery_available == null ? "Check with restaurant" : activity.delivery_available ? "Available (address/coverage may vary)" : "No delivery listed"}
+      </p>
+      <p className="text-emerald-950">
+        <span className="font-semibold">From BYU-I: </span>
+        {activity.walkable_from_campus == null ? "Distance not verified" : activity.walkable_from_campus ? "Walkable" : "Driving recommended"}
+      </p>
+      {activity.google_rating != null && (
+        <p className="text-emerald-950">
+          {mapsUrl ? (
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline decoration-emerald-500 underline-offset-2 hover:text-emerald-700">
+              ★ {activity.google_rating.toFixed(1)} Google Maps
+            </a>
+          ) : (
+            <span className="font-bold">★ {activity.google_rating.toFixed(1)} Google Maps</span>
+          )}
+          {checkedAt && <span className="ml-1 text-xs text-emerald-900/60">(checked {checkedAt})</span>}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default function ActivityCard({ activity }: { activity: Activity }) {
@@ -61,6 +111,7 @@ export default function ActivityCard({ activity }: { activity: Activity }) {
             {activity.address}
           </address>
         )}
+        {activity.category === "food" && <FoodDetails activity={activity} />}
         {websiteUrl && (
           <a
             href={websiteUrl}

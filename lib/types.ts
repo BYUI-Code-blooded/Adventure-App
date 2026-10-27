@@ -17,6 +17,12 @@ export type Activity = {
   created_by?: string | null;
   created_at: string;
   website_url?: string | null;
+  weekly_hours?: Record<string, { open: string; close: string } | null> | null;
+  delivery_available?: boolean | null;
+  google_rating?: number | null;
+  google_maps_url?: string | null;
+  google_rating_checked_at?: string | null;
+  walkable_from_campus?: boolean | null;
 };
 
 // A row of public.profiles (the email lives in the Supabase auth user, not here).

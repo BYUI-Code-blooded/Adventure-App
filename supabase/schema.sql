@@ -109,7 +109,13 @@ create table public.activities (
   category text not null check (category in ('outdoor', 'indoor', 'food', 'weekend')),
   is_featured boolean not null default false,
   created_by uuid default auth.uid() references auth.users (id) on delete set null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  weekly_hours jsonb,
+  delivery_available boolean,
+  google_rating numeric(2, 1) check (google_rating is null or google_rating between 1 and 5),
+  google_maps_url text check (google_maps_url is null or google_maps_url ~ '^https://(www\.)?google\.com/maps'),
+  google_rating_checked_at date,
+  walkable_from_campus boolean
 );
 
 create index activities_category_idx on public.activities (category);
@@ -144,6 +150,8 @@ create policy "activities_delete_own_or_staff" on public.activities
 -- id, created_by and created_at can never be changed from the browser.
 revoke update on public.activities from anon, authenticated;
 grant update (name, description, address, lat, lon, photo_url, website_url, category, is_featured)
+  on public.activities to authenticated;
+grant update (weekly_hours, delivery_available, google_rating, google_maps_url, google_rating_checked_at, walkable_from_campus)
   on public.activities to authenticated;
 
 -- ============================================================
