@@ -16,6 +16,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Local Adventures & Activities Guide",
   description: "Local Adventures & Activities Guide",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
