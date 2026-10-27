@@ -1,7 +1,10 @@
 // Shared inline SVG icons and the main nav links.
 type IconProps = { className?: string };
 
-function Svg({ className, children }: IconProps & { children: React.ReactNode }) {
+function Svg({
+  className,
+  children,
+}: IconProps & { children: React.ReactNode }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -95,6 +98,6 @@ export function SearchIcon(props: IconProps) {
 export const navLinks = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/map", label: "Map", Icon: MapIcon },
-  { href: "/submit-ideas", label: "Submit Ideas", Icon: IdeaIcon },
+  // { href: "/submit-ideas", label: "Submit Ideas", Icon: IdeaIcon },
   { href: "/about", label: "About", Icon: InfoIcon },
 ];
