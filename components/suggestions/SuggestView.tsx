@@ -159,14 +159,11 @@ export default function SuggestView() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (sending || atLimit || !location) {
-      if (!location) setErrors((current) => ({ ...current, location: validateLocation(null) ?? "" }));
-      return;
-    }
+    if (sending || atLimit) return;
     const found = check();
     setErrors(found);
     setSent(false);
-    if (Object.keys(found).length > 0) return;
+    if (Object.keys(found).length > 0 || !location) return;
 
     setSending(true);
     setSubmitError("");
