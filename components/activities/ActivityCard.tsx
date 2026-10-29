@@ -4,54 +4,12 @@ import { useEffect, useState } from "react";
 import { getFoodOpenStatus } from "@/lib/food-hours";
 import type { Activity } from "@/lib/types";
 
-type FoodImage = { src: string; fit: "cover" | "contain" };
-
-// Use location photos where available. Brand marks are the fallback for chain
-// locations where a verified Rexburg photo was not available.
-const foodImages: { match: RegExp; images: FoodImage[] }[] = [
-  { match: /chick\s*[- ]?\s*fil|chick\s*[- ]?\s*flo/i, images: [
-    { src: "https://cdn6.localdatacdn.com/images/5541950/d_chick_fil_a_photo.jpg", fit: "cover" },
-    { src: "https://www.google.com/s2/favicons?domain=chick-fil-a.com&sz=256", fit: "contain" },
-  ] },
-  { match: /pizza\s*pie\s*cafe/i, images: [
-    { src: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0b/e6/63/60/20160708-192430-largejpg.jpg?h=-1&s=1&w=1400", fit: "cover" },
-    { src: "https://www.google.com/s2/favicons?domain=pizzapiecafe.co&sz=256", fit: "contain" },
-  ] },
-  { match: /big\s*jud/i, images: [
-    { src: "https://s6.localdatacdn.com/images/3427115/m_big_jud_s_photo.jpg", fit: "cover" },
-    { src: "https://www.google.com/s2/favicons?domain=bigjuds.com&sz=256", fit: "contain" },
-  ] },
-  { match: /hickory/i, images: [
-    { src: "https://i.autoreserve.com/thumb/800x800/restaurant_image/image/045/299/450/45299450/f4f8bc52-c7bc-4211-bdcf-6fb5060b6347.jpg?format=webp", fit: "cover" },
-    { src: "https://www.google.com/s2/favicons?domain=thehickory.com&sz=256", fit: "contain" },
-  ] },
-  { match: /mac\s*shack/i, images: [
-    { src: "https://cdn6.localdatacdn.com/images/9438292/d_the_mac_shack_photo.jpg", fit: "cover" },
-    { src: "https://img.cdn4dd.com/cdn-cgi/image/fit%3Dcontain%2Cwidth%3D1200%2Cheight%3D672%2Cformat%3Dauto/https%3A/doordash-static.s3.amazonaws.com/media/restaurant/cover/74c94d28-8477-4cf0-b7cf-08550a998a7e.jpg", fit: "contain" },
-    { src: "https://www.google.com/s2/favicons?domain=doordash.com&sz=256", fit: "contain" },
-  ] },
-  { match: /little\s*caesar/i, images: [
-    { src: "https://www.google.com/s2/favicons?domain=littlecaesars.com&sz=256", fit: "contain" },
-  ] },
-  { match: /mcdonald/i, images: [
-    { src: "https://www.google.com/s2/favicons?domain=mcdonalds.com&sz=256", fit: "contain" },
-  ] },
-  { match: /freddy/i, images: [
-    { src: "https://i1.sndcdn.com/artworks-000210602919-xnspqe-t1080x1080.jpg", fit: "cover" },
-    { src: "https://www.google.com/s2/favicons?domain=freddys.com&sz=256", fit: "contain" },
-  ] },
-  { match: /dairy\s*queen|\bdq\b/i, images: [
-    { src: "https://www.google.com/s2/favicons?domain=dairyqueen.com&sz=256", fit: "contain" },
-  ] },
-];
-
-function getFoodImages(name: string, websiteUrl?: string | null): FoodImage[] {
-  const curated = foodImages.find(({ match }) => match.test(name))?.images ?? [];
-  const domain = websiteUrl ? safeWebsiteUrl(websiteUrl) : undefined;
-  const logo = domain
-    ? [{ src: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(domain).hostname)}&sz=256`, fit: "contain" as const }]
-    : [];
-  return [...curated, ...logo];
+// Brand mark from the restaurant's website, used when the row has no working photo_url.
+function getWebsiteLogo(websiteUrl?: string | null) {
+  const url = safeWebsiteUrl(websiteUrl);
+  return url
+    ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).hostname)}&sz=256`
+    : undefined;
 }
 
 function safeWebsiteUrl(value?: string | null) {
@@ -114,20 +72,18 @@ function FoodDetails({ activity }: { activity: Activity }) {
   );
 }
 
-export default function ActivityCard({ activity }: { activity: Activity }) {
+export default function ActivityCard({ activity, showPhoto }: { activity: Activity; showPhoto: boolean }) {
   const [imageFailed, setImageFailed] = useState(false);
-  const [foodImageIndex, setFoodImageIndex] = useState(0);
+  const [logoFailed, setLogoFailed] = useState(false);
   const websiteUrl = safeWebsiteUrl(activity.website_url);
   const categoryLabel = activity.category.charAt(0).toUpperCase() + activity.category.slice(1);
-  const foodImageCandidates = getFoodImages(activity.name, activity.website_url);
-  const foodImage = foodImageCandidates[foodImageIndex];
-  const imageUrl = activity.photo_url && !imageFailed
-    ? activity.photo_url
-    : activity.category === "food" ? foodImage?.src : undefined;
+  const usingPhoto = Boolean(activity.photo_url) && !imageFailed;
+  const logoUrl = activity.category === "food" && !logoFailed ? getWebsiteLogo(activity.website_url) : undefined;
+  const imageUrl = usingPhoto ? activity.photo_url : logoUrl;
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl bg-amber-50 shadow-sm">
-      {imageUrl ? (
+      {!showPhoto ? null : imageUrl ? (
         // Use the browser image element so database photo URLs do not need Next image host config.
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -135,11 +91,8 @@ export default function ActivityCard({ activity }: { activity: Activity }) {
           alt={activity.name}
           loading="lazy"
           decoding="async"
-          onError={() => {
-            if (activity.photo_url && !imageFailed) setImageFailed(true);
-            else setFoodImageIndex((index) => index + 1);
-          }}
-          className={`aspect-video w-full bg-white ${foodImage?.fit === "contain" && (!activity.photo_url || imageFailed) ? "object-contain p-10" : "object-cover"}`}
+          onError={() => (usingPhoto ? setImageFailed(true) : setLogoFailed(true))}
+          className={`aspect-video w-full bg-white ${usingPhoto ? "object-cover" : "object-contain p-10"}`}
         />
       ) : (
         <div
