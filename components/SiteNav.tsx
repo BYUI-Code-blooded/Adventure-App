@@ -57,7 +57,8 @@ export default function SiteNav() {
     };
   }, [exploreOpen]);
 
-  const exploreActive = exploreLinks.some(({ href }) => isActive(pathname, href));
+  const normalizedPathname = pathname.replace(/\/$/, "") || "/";
+  const exploreActive = exploreLinks.some(({ href }) => normalizedPathname === href);
   const exploreButtonClass = "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900 aria-[current=page]:bg-amber-300 aria-[current=page]:text-emerald-950";
   const exploreMenu = (id: string) => (
     <ul id={id} className="relative z-[1101] min-w-40 rounded-xl bg-emerald-900 p-1 text-amber-50 shadow-lg">
@@ -116,6 +117,7 @@ export default function SiteNav() {
     ...(user && !user.anonymous ? [{ href: "/submit-ideas", label: "Suggest", Icon: IdeaIcon }] : []),
     ...(user && !user.anonymous && staff ? [{ href: "/admin", label: "Review", Icon: UsersIcon }] : []),
   ];
+  const mobileLinks = links.filter(({ href }) => href !== "/admin");
 
   return (
     <>
@@ -127,13 +129,13 @@ export default function SiteNav() {
           </Link>
           <div className="flex items-center gap-1">
             <nav aria-label="Main" className="hidden md:block">
-              <ul className="flex gap-1">
+              <ul className="flex items-center gap-1">
                 {links.map(({ href, label }) => (
                   <li key={href}>
                     <Link
                       href={href}
                       aria-current={isActive(pathname, href) ? "page" : undefined}
-                      className="rounded-full px-4 py-2 text-sm font-medium hover:bg-emerald-800 aria-[current=page]:bg-amber-300 aria-[current=page]:text-emerald-950"
+                      className="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium hover:bg-emerald-800 aria-[current=page]:bg-amber-300 aria-[current=page]:text-emerald-950"
                     >
                       {label}
                     </Link>
@@ -170,8 +172,8 @@ export default function SiteNav() {
         aria-label="Main"
         className="fixed inset-x-0 bottom-0 z-[1100] border-t border-emerald-800 bg-emerald-900 pb-[env(safe-area-inset-bottom)] text-emerald-200 md:hidden"
       >
-        <ul className="grid grid-flow-col auto-cols-fr">
-          {links.map(({ href, label, Icon }) => (
+        <ul className={`grid ${mobileLinks.length + 1 === 5 ? "grid-cols-5" : "grid-cols-4"}`}>
+                {mobileLinks.map(({ href, label, Icon }) => (
             <li key={href}>
               <Link
                 href={href}
@@ -191,7 +193,7 @@ export default function SiteNav() {
               aria-controls="mobile-explore-menu"
               aria-current={exploreActive ? "page" : undefined}
               onClick={() => setExploreState((state) => ({ ...state, open: !state.open }))}
-              className="flex min-h-11 w-full flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium hover:text-amber-50 focus-visible:ring-2 focus-visible:ring-amber-300 aria-[current=page]:text-amber-300"
+              className="flex w-full appearance-none flex-col items-center gap-1 bg-transparent py-2.5 text-[11px] font-medium hover:text-amber-50 focus-visible:ring-2 focus-visible:ring-amber-300 aria-[current=page]:text-amber-300"
             >
               <ExploreIcon className="size-6" />
               Explore
