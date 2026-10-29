@@ -1,4 +1,10 @@
-// Owner: HTML teammate
+import type { Metadata } from "next";
+import SuggestView from "@/components/suggestions/SuggestView";
+
+export const metadata: Metadata = {
+  title: "Submit an idea | Local Adventures & Activities Guide",
+};
+
 export default function SubmitIdeasPage() {
-  return <h1>Submit Ideas</h1>;
+  return <SuggestView />;
 }

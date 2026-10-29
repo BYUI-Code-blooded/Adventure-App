@@ -209,6 +209,23 @@ export default function AccountView() {
               Sign out
             </button>
           </div>
+
+          <div className="rounded-2xl bg-amber-50 p-6 shadow-sm md:col-span-2">
+            <h2 className="text-lg font-bold">Ideas</h2>
+            <p className="mt-2 text-emerald-900/80">
+              Know a place we should add to the map? Send it in and we&apos;ll review it.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link href="/submit-ideas" className={`${primaryClass} sm:w-auto`}>
+                Suggest an idea
+              </Link>
+              {(role === "admin" || role === "developer") && (
+                <Link href="/admin" className={`${secondaryClass} sm:w-auto`}>
+                  Review suggestions
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </section>
     </Shell>

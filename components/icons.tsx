@@ -1,7 +1,10 @@
 // Shared inline SVG icons and the main nav links.
 type IconProps = { className?: string };
 
-function Svg({ className, children }: IconProps & { children: React.ReactNode }) {
+function Svg({
+  className,
+  children,
+}: IconProps & { children: React.ReactNode }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -64,6 +67,15 @@ export function PinIcon(props: IconProps) {
   );
 }
 
+export function FoodIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M6 3v6M3.5 3v5.5a2.5 2.5 0 0 0 5 0V3M6 11v10" />
+      <path d="M16 3c2 2 3 5 3 8h-3v10M16 3v18" />
+    </Svg>
+  );
+}
+
 export function UsersIcon(props: IconProps) {
   return (
     <Svg {...props}>
@@ -104,7 +116,7 @@ export function ExploreIcon(props: IconProps) {
 export const navLinks = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/map", label: "Map", Icon: MapIcon },
-  { href: "/submit-ideas", label: "Submit Ideas", Icon: IdeaIcon },
+  // { href: "/submit-ideas", label: "Submit Ideas", Icon: IdeaIcon },
   { href: "/about", label: "About", Icon: InfoIcon },
 ];
 

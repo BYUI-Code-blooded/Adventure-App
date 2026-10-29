@@ -103,47 +103,147 @@ create table public.activities (
   description text check (description is null or char_length(description) <= 1000),
   address text check (address is null or char_length(address) <= 200),
   lat double precision not null check (lat between -90 and 90),
-  lng double precision not null check (lng between -180 and 180),
+  lon double precision not null check (lon between -180 and 180),
   photo_url text check (photo_url is null or (photo_url ~ '^https://' and char_length(photo_url) <= 500)),
+  website_url text,
   category text not null check (category in ('outdoor', 'indoor', 'food', 'weekend')),
   is_featured boolean not null default false,
   created_by uuid default auth.uid() references auth.users (id) on delete set null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  weekly_hours jsonb,
+  delivery_available boolean,
+  google_rating numeric(2, 1) check (google_rating is null or google_rating between 1 and 5),
+  google_maps_url text check (google_maps_url is null or google_maps_url ~ '^https://(www\.)?google\.com/maps'),
+  google_rating_checked_at date,
+  walkable_from_campus boolean,
+  status text not null default 'approved' check (status in ('pending', 'approved', 'rejected')),
+  rejection_reason text check (rejection_reason is null or char_length(rejection_reason) <= 300),
+  reviewed_by uuid references auth.users (id) on delete set null,
+  reviewed_at timestamptz
 );
 
+create index activities_status_idx on public.activities (status);
 create index activities_category_idx on public.activities (category);
 create index activities_created_by_idx on public.activities (created_by);
 
 alter table public.activities enable row level security;
 
-create policy "activities_select_all" on public.activities
-  for select to anon, authenticated
-  using (true);
+-- Helper: is a point within 300 km of Rexburg? (haversine, in km)
+create function public.within_rexburg_area(p_lat double precision, p_lon double precision)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select 2 * 6371 * asin(sqrt(
+    power(sin(radians(p_lat - 43.826) / 2), 2)
+    + cos(radians(43.826)) * cos(radians(p_lat)) * power(sin(radians(p_lon + 111.7897) / 2), 2)
+  )) <= 300;
+$$;
 
--- Only staff (admin or developer) can mark an activity as featured.
+-- Visitors only see approved activities. Signed-in users also see their own; staff see everything.
+create policy "activities_select_approved" on public.activities
+  for select to anon
+  using (status = 'approved');
+
+create policy "activities_select_visible" on public.activities
+  for select to authenticated
+  using (
+    status = 'approved'
+    or created_by = (select auth.uid())
+    or (select public.is_staff())
+  );
+
+-- Staff can publish directly. Everyone else (with a real, non-anonymous account) can only submit a
+-- pending, non-featured idea within 300 km of Rexburg.
 create policy "activities_insert_own" on public.activities
   for insert to authenticated
   with check (
     created_by = (select auth.uid())
-    and (is_featured = false or (select public.is_staff()))
+    and (
+      (select public.is_staff())
+      or (
+        coalesce((select auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+        and status = 'pending'
+        and is_featured = false
+        and reviewed_by is null
+        and reviewed_at is null
+        and rejection_reason is null
+        and public.within_rexburg_area(lat, lon)
+      )
+    )
   );
 
-create policy "activities_update_own_or_staff" on public.activities
+-- Only staff edit or review activities (users cannot edit a suggestion after sending it).
+create policy "activities_update_staff" on public.activities
   for update to authenticated
-  using (created_by = (select auth.uid()) or (select public.is_staff()))
-  with check (
-    (created_by = (select auth.uid()) and is_featured = false)
+  using ((select public.is_staff()))
+  with check ((select public.is_staff()));
+
+-- Users can withdraw their own pending suggestions; staff can delete anything.
+create policy "activities_delete_own_pending_or_staff" on public.activities
+  for delete to authenticated
+  using (
+    (created_by = (select auth.uid()) and status = 'pending')
     or (select public.is_staff())
   );
 
-create policy "activities_delete_own_or_staff" on public.activities
-  for delete to authenticated
-  using (created_by = (select auth.uid()) or (select public.is_staff()));
-
--- id, created_by and created_at can never be changed from the browser.
 revoke update on public.activities from anon, authenticated;
-grant update (name, description, address, lat, lng, photo_url, category, is_featured)
+grant update (name, description, address, lat, lon, photo_url, website_url, category, is_featured, status, rejection_reason)
   on public.activities to authenticated;
+grant update (weekly_hours, delivery_available, google_rating, google_maps_url, google_rating_checked_at, walkable_from_campus)
+  on public.activities to authenticated;
+
+-- Regular users can have at most 5 pending suggestions at a time.
+create function public.enforce_pending_suggestion_limit()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.status = 'pending' and not public.is_staff() then
+    perform pg_advisory_xact_lock(hashtext(new.created_by::text));
+    if (select count(*) from public.activities a
+        where a.created_by = new.created_by and a.status = 'pending') >= 5 then
+      raise exception 'You already have 5 pending suggestions. Wait for a review or delete one.'
+        using errcode = 'check_violation';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function public.enforce_pending_suggestion_limit() from public, anon, authenticated;
+
+create trigger activities_pending_limit
+  before insert on public.activities
+  for each row execute function public.enforce_pending_suggestion_limit();
+
+-- Stamp who reviewed an activity and when, whenever its status changes.
+create function public.stamp_activity_review()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.status is distinct from old.status then
+    new.reviewed_by := auth.uid();
+    new.reviewed_at := now();
+    if new.status <> 'rejected' then
+      new.rejection_reason := null;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function public.stamp_activity_review() from public, anon, authenticated;
+
+create trigger activities_stamp_review
+  before update on public.activities
+  for each row execute function public.stamp_activity_review();
 
 -- ============================================================
 -- events: someone schedules an activity at a time
@@ -178,6 +278,10 @@ create policy "events_insert_own" on public.events
     creator_id = (select auth.uid())
     and start_time >= now() - interval '5 minutes'
     and start_time <= now() + interval '1 year'
+    and exists (
+      select 1 from public.activities a
+      where a.id = activity_id and a.status = 'approved'
+    )
   );
 
 create policy "events_update_own_or_staff" on public.events
