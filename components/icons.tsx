@@ -92,9 +92,24 @@ export function SearchIcon(props: IconProps) {
   );
 }
 
+export function ExploreIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z" />
+    </Svg>
+  );
+}
+
 export const navLinks = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/map", label: "Map", Icon: MapIcon },
   { href: "/submit-ideas", label: "Submit Ideas", Icon: IdeaIcon },
   { href: "/about", label: "About", Icon: InfoIcon },
+];
+
+export const exploreLinks = [
+  { href: "/indoor", label: "Indoor" },
+  { href: "/outdoor", label: "Outdoor" },
+  { href: "/food", label: "Food" },
 ];
