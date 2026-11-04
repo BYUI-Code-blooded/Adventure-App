@@ -5,7 +5,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { CODE_LENGTH, NAME_MAX, cleanCode, isCodeComplete, validateName, validatePhone } from "@/lib/validation";
+import { ALLOWED_EMAIL_DOMAIN, CODE_LENGTH, NAME_MAX, cleanCode, isAllowedEmail, isCodeComplete, validateName, validatePhone } from "@/lib/validation";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
 import { errorClass, inputClass, primaryClass, secondaryClass } from "@/components/auth/styles";
 
@@ -22,8 +22,8 @@ const landingError = landingParams?.get("error_description") ?? landingParams?.g
 
 function friendlyError(message: string, status?: number) {
   const text = message.toLowerCase();
-  if (text.includes("not authorized")) {
-    return "That email can't sign in yet. For now, only team members can.";
+  if (text.includes("not authorized") || text.includes("database error")) {
+    return `Only @${ALLOWED_EMAIL_DOMAIN} email addresses can sign in.`;
   }
   if (status === 429 || text.includes("rate limit")) {
     return "Too many emails have been sent. Wait a little while and try again.";
@@ -76,6 +76,11 @@ export default function LoginForm() {
     event?.preventDefault();
     const clean = email.trim().toLowerCase();
     if (!clean || status === "sending") return;
+    if (!isAllowedEmail(clean)) {
+      setStatus("error");
+      setMessage(`Only @${ALLOWED_EMAIL_DOMAIN} email addresses can sign in.`);
+      return;
+    }
     setStatus("sending");
     setMessage("");
     setCodeError("");
