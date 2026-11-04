@@ -13,7 +13,12 @@ begin
     raise exception 'Anonymous sign-ins are not allowed';
   end if;
   if lower(coalesce(new.email, '')) !~ '^[^@[:space:]]+@byui\.edu$'
-     and lower(coalesce(new.email, '')) not in ('myemail.kristi@gmail.com') then
+     and lower(coalesce(new.email, '')) not in (
+       'myemail.kristi@gmail.com',
+       'dallaswalker1023@gmail.com',
+       'aktrujillo81@gmail.com',
+       'vinimp2003@gmail.com'
+     ) then
     raise exception 'Only @byui.edu email addresses can sign up';
   end if;
   return new;

@@ -9,7 +9,12 @@ export const NAME_MAX = 80;
 // Only these sign in: any @byui.edu address, plus a short list of exceptions.
 // Keep EXTRA_ALLOWED_EMAILS in sync with supabase/byui-email-only-migration.sql.
 export const ALLOWED_EMAIL_DOMAIN = "byui.edu";
-const EXTRA_ALLOWED_EMAILS = ["myemail.kristi@gmail.com"];
+const EXTRA_ALLOWED_EMAILS = [
+  "myemail.kristi@gmail.com",
+  "dallaswalker1023@gmail.com",
+  "aktrujillo81@gmail.com",
+  "vinimp2003@gmail.com",
+];
 
 /** True when the email may sign in: @byui.edu or on the exception list. Frontend check only; the database enforces it too. */
 export function isAllowedEmail(value: string) {
