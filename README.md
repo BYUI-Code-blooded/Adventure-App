@@ -25,6 +25,9 @@ Open http://localhost:3000. Before merging, `npm run build` and `npm run lint` m
 - `supabase/` database schema (`schema.sql`)
 - `docs/` architecture notes, gotchas and feature docs
 
+## Assets
+The site's assets (images and other static files, e.g. in `public/`) are stored inside this GitHub repository, not on an external storage service or CDN.
+
 ## Git workflow
 - No pull requests. Everyone can push to `main`.
 - One branch per feature: `feature/<short-name>`.
