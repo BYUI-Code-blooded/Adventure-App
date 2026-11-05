@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ActivityCard from "@/components/activities/ActivityCard";
+import { useAuthProfile } from "@/components/auth/useAuthProfile";
 import { getFoodOpenStatus } from "@/lib/food-hours";
 import type { Activity, ActivityCategory } from "@/lib/types";
 
@@ -29,6 +30,9 @@ export default function ActivitiesGrid({
   const [openNowOnly, setOpenNowOnly] = useState(false);
   const [minimumRating, setMinimumRating] = useState("any");
   const [now, setNow] = useState(() => new Date());
+  const { session } = useAuthProfile();
+  // Photos are only shown to signed-in (non-anonymous) users.
+  const signedIn = Boolean(session) && !session?.user.is_anonymous;
 
   useEffect(() => {
     if (category !== "food") return;
@@ -157,7 +161,7 @@ export default function ActivitiesGrid({
         <ul className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {visibleActivities.map((activity) => (
             <li key={activity.id}>
-              <ActivityCard activity={activity} />
+              <ActivityCard activity={activity} showPhoto={signedIn} />
             </li>
           ))}
         </ul>

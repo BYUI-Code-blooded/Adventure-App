@@ -1,0 +1,916 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Local Adventures Blueprint</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout concept: a long vertical "field guide" of 11 slides; sticky tab strip on top, every diagram is clickable and explains itself in a panel beside or below it. Three zone colors (browser / external / hosting) repeat on every diagram. */
+:root{
+  --bg:#F2F5F3; --surface:#FFFFFF; --surface2:#E7EDE9; --fg:#12201A; --muted:#4F6159; --line:#C9D5CE;
+  --accent:#0B7A5F; --accent-ink:#FFFFFF; --accent-soft:#D2EFE5;
+  --browser:#2563C9; --browser-soft:#DCE8FA;
+  --ext:#A85A05; --ext-soft:#FAE6CB;
+  --host:#0B7A5F; --host-soft:#D2EFE5;
+  --bad:#B3261E; --bad-soft:#F8DAD7; --good:#17703F;
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'Figtree','Segoe UI',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0D1512; --surface:#151F1B; --surface2:#1D2B25; --fg:#E5EEE9; --muted:#97ACA1; --line:#2C3E36;
+  --accent:#3DD6A6; --accent-ink:#06130E; --accent-soft:#113629;
+  --browser:#7CA9FF; --browser-soft:#18284A;
+  --ext:#F3A24E; --ext-soft:#3B2711;
+  --host:#3DD6A6; --host-soft:#113629;
+  --bad:#FF8F86; --bad-soft:#3F1C19; --good:#5FD38D; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0D1512; --surface:#151F1B; --surface2:#1D2B25; --fg:#E5EEE9; --muted:#97ACA1; --line:#2C3E36;
+  --accent:#3DD6A6; --accent-ink:#06130E; --accent-soft:#113629;
+  --browser:#7CA9FF; --browser-soft:#18284A;
+  --ext:#F3A24E; --ext-soft:#3B2711;
+  --host:#3DD6A6; --host-soft:#113629;
+  --bad:#FF8F86; --bad-soft:#3F1C19; --good:#5FD38D; color-scheme:dark; }
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55;padding-inline:16px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+.wrap{max-width:1080px;margin-inline:auto}
+h1,h2,h3{font-family:var(--font-display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,6vw,4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.8vw,2.4rem);font-weight:800;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0}
+code,.mono{font-family:var(--font-mono)}
+code{font-size:.86em;background:var(--surface2);padding:.1em .4em;border-radius:4px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--browser);outline-offset:2px}
+
+/* tab strip */
+.strip{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:-16px;padding-inline:16px}
+.strip ol{list-style:none;margin:0 auto;padding:8px 0;display:flex;gap:6px;overflow-x:auto;max-width:1080px;scrollbar-width:thin}
+.strip a{display:flex;gap:6px;align-items:center;white-space:nowrap;text-decoration:none;color:var(--muted);font-size:.82rem;font-weight:600;padding:6px 10px;border-radius:999px;border:1px solid transparent}
+.strip a b{font-family:var(--font-mono);font-weight:500;font-size:.74rem}
+.strip a:hover{color:var(--fg);border-color:var(--line)}
+.strip a.on{background:var(--accent);color:var(--accent-ink)}
+
+/* slides */
+.slide{padding-block:64px;border-top:1px solid var(--line);scroll-margin-top:52px}
+.slide:first-of-type{border-top:0}
+.kicker{font-family:var(--font-mono);font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.lede{color:var(--muted);font-size:1.08rem;max-width:68ch;margin-top:14px}
+.head{margin-bottom:32px}
+.try{display:inline-flex;gap:8px;align-items:center;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--browser);border:1px dashed var(--browser);padding:3px 10px;border-radius:999px;margin-bottom:14px}
+
+/* generic parts */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.card h3{margin-bottom:6px}
+.card p{color:var(--muted);font-size:.95rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-height:88px;min-width:0}
+.panel h3{margin-bottom:4px}
+.panel p{color:var(--muted)}
+.panel .tag{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px}
+.chosen-badge{display:inline-block;background:var(--accent);color:var(--accent-ink);font-family:var(--font-mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;vertical-align:middle}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--surface);padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:7px 14px;border-radius:999px;font-weight:600;font-size:.9rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;font-weight:600;font-size:.9rem}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.tbl table{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+.tbl th,.tbl td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td,.tbl tr:last-child th{border-bottom:0}
+.tbl thead th{font-family:var(--font-display);font-size:.95rem;background:var(--surface2)}
+.tbl td.pick,.tbl th.pick{background:var(--accent-soft)}
+.tbl thead th.pick{background:var(--accent);color:var(--accent-ink)}
+.y{color:var(--good);font-weight:700}.n{color:var(--bad);font-weight:700}.m{color:var(--ext);font-weight:700}
+svg{max-width:100%;height:auto;display:block}
+svg text{font-family:var(--font-body);fill:currentColor}
+figure{margin:0}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:10px;max-width:70ch}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto}
+
+/* zone colors for SVG */
+.zb rect.box,.zb path.box{fill:var(--browser-soft);stroke:var(--browser);stroke-width:1.5}
+.ze rect.box{fill:var(--ext-soft);stroke:var(--ext);stroke-width:1.5}
+.zh rect.box{fill:var(--host-soft);stroke:var(--host);stroke-width:1.5}
+.zone-b{fill:none;stroke:var(--browser);stroke-width:1.5;stroke-dasharray:6 5}
+.zone-e{fill:none;stroke:var(--ext);stroke-width:1.5;stroke-dasharray:6 5}
+.zone-h{fill:none;stroke:var(--host);stroke-width:1.5;stroke-dasharray:6 5}
+.node{cursor:pointer}
+.node:hover rect.box,.node.sel rect.box{stroke-width:3}
+.node:focus-visible{outline:none}
+.node:focus-visible rect.box{stroke-width:3.5;stroke:var(--fg)}
+.lbl{font-size:12px;fill:var(--muted)}
+.t-b{fill:var(--browser)!important}.t-e{fill:var(--ext)!important}.t-h{fill:var(--host)!important}
+.edge{stroke:currentColor;stroke-width:1.6;fill:none}
+.edge.b{stroke:var(--browser)}.edge.e{stroke:var(--ext)}.edge.h{stroke:var(--host)}.edge.x{stroke:var(--bad);stroke-dasharray:5 4}
+
+/* hero */
+.hero{padding-block:56px 48px}
+.hero p.lede{font-size:1.2rem}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.chip{border:1px solid var(--line);background:var(--surface);padding:10px 18px;border-radius:999px;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.hero .panel{margin-top:16px;max-width:760px}
+.guide{display:flex;gap:18px;flex-wrap:wrap;margin-top:34px;color:var(--muted);font-size:.9rem}
+.guide span{display:inline-flex;gap:8px;align-items:center}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* problem demo */
+.demo{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.win{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.win header{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 12px;background:var(--surface2);font-size:.85rem;font-weight:600}
+.win header span:last-child{font-family:var(--font-mono);font-size:.72rem;color:var(--muted)}
+.win svg{cursor:crosshair;width:100%}
+.mapbg{fill:var(--surface2)}.road{stroke:var(--line);stroke-width:5;fill:none}.river{stroke:var(--browser);stroke-opacity:.55;stroke-width:9;fill:none;stroke-linecap:round}
+.pin circle{fill:var(--ext);stroke:var(--surface);stroke-width:2}
+.pin text{fill:#fff;font-size:9px;font-weight:700;text-anchor:middle}
+.win .count{padding:8px 12px;font-size:.85rem;color:var(--muted);border-top:1px solid var(--line)}
+.verdict{margin-top:16px}
+.next{margin-top:36px}
+</style>
+
+<div class="strip"><ol id="tabs"></ol></div>
+
+<main class="wrap">
+
+<section class="slide hero" id="s1" data-name="Goal">
+  <div class="kicker">Technical Teamwork · BYU-Idaho · Architecture briefing</div>
+  <h1>A shared map of Rexburg adventures, built with no server of our own.</h1>
+  <p class="lede">The <strong>Local Adventures &amp; Activities Guide</strong>: free and cheap things to do near campus, plus a map where anyone can drop an event pin and others can join.</p>
+  <div class="chips" role="group" aria-label="Three project constraints">
+    <button class="chip" data-c="simple" aria-pressed="true">1 · Keep it simple</button>
+    <button class="chip" data-c="nobackend" aria-pressed="false">2 · No custom backend</button>
+    <button class="chip" data-c="free" aria-pressed="false">3 · Free to deploy</button>
+  </div>
+  <div class="panel" id="constraintPanel" aria-live="polite"></div>
+  <div class="guide">
+    <span><i class="dot" style="background:var(--browser)"></i>Runs in the visitor's browser</span>
+    <span><i class="dot" style="background:var(--ext)"></i>External service we use</span>
+    <span><i class="dot" style="background:var(--host)"></i>Hosting and code</span>
+    
+  </div>
+</section>
+
+<section class="slide" id="s2" data-name="The problem">
+  <div class="head">
+    <div class="kicker">02 · The core problem</div>
+    <h2>No backend plus a shared map means we need a shared database.</h2>
+  </div>
+  <span class="try">Try it · click a map to drop a pin</span>
+  <div style="margin-bottom:16px"><div class="seg" role="group" aria-label="Where pins are stored">
+    <button id="modeLocal" aria-pressed="true">Pins saved in the browser (localStorage)</button>
+    <button id="modeShared" aria-pressed="false">Pins saved in Supabase</button>
+  </div></div>
+  <div class="demo">
+    <div class="win"><header><span>Ana's phone</span><span>rexburg-guide.app/map</span></header>
+      <svg id="mapA" viewBox="0 0 240 150" role="img" aria-label="Ana's map. Click to add a pin."></svg>
+      <div class="count" id="cA"></div></div>
+    <div class="win"><header><span>Ben's laptop</span><span>rexburg-guide.app/map</span></header>
+      <svg id="mapB" viewBox="0 0 240 150" role="img" aria-label="Ben's map. Click to add a pin."></svg>
+      <div class="count" id="cB"></div></div>
+  </div>
+  <div class="panel verdict" id="verdict" aria-live="polite"></div>
+
+  <h3 style="margin:36px 0 12px">Three ways to store the pins</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Option</th><th>Shared?</th><th>Visitors can add pins?</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><th class="pick">Supabase (PostgreSQL) <span class="chosen-badge">Chosen</span></th><td class="pick"><span class="y">&#10003; Yes</span></td><td class="pick"><span class="y">&#10003; Yes</span></td><td class="pick"><span class="y">Meets it</span></td></tr>
+      <tr><th><code>.json</code> file in the repo</th><td><span class="y">&#10003; Yes</span></td><td><span class="n">&#10007; No</span></td><td><span class="n">Misses it</span></td></tr>
+      <tr><th><code>localStorage</code></th><td><span class="n">&#10007; No</span></td><td><span class="m">Only in their own browser</span></td><td><span class="n">Misses it</span></td></tr>
+    </tbody></table></div>
+  <p class="lede" style="margin-top:14px">Supabase for the map. Every other page is plain static content.</p>
+</section>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const SVGNS='http://www.w3.org/2000/svg';
+/* constraint chips */
+const CONS={
+ simple:['Constraint 1','Keep it simple','Fewest tools that still do the job. Every extra tool is one more place to get stuck.'],
+ nobackend:['Constraint 2','No custom backend','We run no server. Each browser talks straight to a hosted database (Supabase) through <code>supabase-js</code>.'],
+ free:['Constraint 3','Free to deploy','Vercel hosts the static site and Supabase stores the data, both on free plans.']};
+function showCons(k){ $$('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.c===k));
+ const [t,h,p]=CONS[k]; $('#constraintPanel').innerHTML='<span class="tag">'+t+'</span><h3>'+h+'</h3><p>'+p+'</p>'; }
+$$('.chip').forEach(c=>c.addEventListener('click',()=>showCons(c.dataset.c))); showCons('simple');
+
+</script>
+<script>
+/* slide 2 demo */
+(function(){
+ let mode='local';
+ const pins={A:[{x:70,y:60}],B:[],S:[]};
+ const svgs={A:$('#mapA'),B:$('#mapB')};
+ function base(svg){
+  svg.innerHTML='<rect class="mapbg" width="240" height="150"/><path class="river" d="M-5 118 C 50 90, 90 140, 140 105 S 220 70, 245 80"/><path class="road" d="M20 -5 L 40 155"/><path class="road" d="M-5 40 L 245 30"/><path class="road" d="M150 -5 L 175 155"/><text x="10" y="144" font-size="9" style="fill:var(--muted)">Sketch of Rexburg</text>';
+ }
+ function draw(){
+  for(const k of ['A','B']){
+   const svg=svgs[k]; base(svg);
+   const list = mode==='shared'? pins.S : pins[k];
+   list.forEach((p,i)=>{const g=document.createElementNS(SVGNS,'g');g.setAttribute('class','pin');
+     g.innerHTML='<circle cx="'+p.x+'" cy="'+p.y+'" r="9"/><text x="'+p.x+'" y="'+(p.y+3)+'">'+(i+1)+'</text>';svg.appendChild(g);});
+   $('#c'+k).textContent = list.length? list.length+' pin'+(list.length>1?'s':'')+' visible' : 'No pins visible';
+  }
+  const v=$('#verdict');
+  if(mode==='local'){ v.innerHTML='<span class="tag">What is happening</span><h3>Each browser keeps its own private list.</h3><p>Ana has a pin and Ben sees nothing. Try clicking Ben’s map.</p>'; }
+  else { v.innerHTML='<span class="tag">What is happening</span><h3>Both browsers read the same table.</h3><p>Each click becomes a row in a Supabase table, and every browser reads the same rows.</p>'; }
+ }
+ function add(k,ev){
+  const svg=svgs[k], r=svg.getBoundingClientRect();
+  const x=(ev.clientX-r.left)/r.width*240, y=(ev.clientY-r.top)/r.height*150;
+  const list = mode==='shared'? pins.S : pins[k];
+  if(list.length>=8) list.shift();
+  list.push({x:Math.round(x),y:Math.round(y)}); draw();
+ }
+ svgs.A.addEventListener('click',e=>add('A',e)); svgs.B.addEventListener('click',e=>add('B',e));
+ function setMode(m){mode=m;$('#modeLocal').setAttribute('aria-pressed',m==='local');$('#modeShared').setAttribute('aria-pressed',m==='shared');
+  if(m==='shared' && pins.S.length===0) pins.S.push({x:70,y:60});
+  draw();}
+ $('#modeLocal').onclick=()=>setMode('local'); $('#modeShared').onclick=()=>setMode('shared');
+ draw();
+})();
+</script>
+
+<style>
+.ib{fill:var(--browser-soft);stroke:var(--browser);stroke-width:1.5}
+.ie{fill:var(--ext-soft);stroke:var(--ext);stroke-width:1.5}
+.ih{fill:var(--host-soft);stroke:var(--host);stroke-width:1.5}
+.ln{fill:none;stroke:currentColor;stroke-width:1.6}
+.term{display:flex;flex-direction:column;gap:6px}
+.term svg{width:100%;height:auto;max-height:76px;margin-bottom:4px}
+.term .ex{font-family:var(--font-mono);font-size:.76rem;color:var(--muted);margin-top:auto;padding-top:6px}
+.costrow{display:grid;grid-template-columns:1fr auto 1.4fr;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.costrow b{font-weight:600}
+.costrow .ar{color:var(--accent);font-weight:700}
+.costrow .fix{color:var(--muted)}
+@media (max-width:560px){.costrow{grid-template-columns:1fr;gap:4px}.costrow .ar{display:none}}
+.reason svg{width:40px;height:40px;margin-bottom:8px}
+.pylist{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+.pylist li{display:flex;gap:10px;align-items:flex-start}
+.pylist li span:first-child{color:var(--bad);font-weight:700}
+</style>
+
+<section class="slide" id="s3" data-name="Vocabulary">
+  <div class="head">
+    <div class="kicker">03 · Vocabulary</div>
+    <h2>Next.js is React with routes, build and deploy included.</h2>
+  </div>
+
+  <span class="try">Try it · click a layer or a tool</span>
+  <div class="demo" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));align-items:start">
+    <figure>
+      <div class="diagram">
+      <svg viewBox="0 0 560 330" role="img" aria-label="The stack as layers. JavaScript at the bottom, TypeScript on top of it, React on top of that, Next.js on top of React, and our TSX pages at the top. Leaflet and supabase-js are libraries our pages call.">
+        <g class="node zb" tabindex="0" role="button" data-k="pages" aria-label="Our TSX pages">
+          <rect class="box" x="20" y="14" width="330" height="48" rx="8"/><text x="185" y="44" text-anchor="middle" font-size="15" font-weight="700">Our pages and components (.tsx)</text></g>
+        <g class="node zb" tabindex="0" role="button" data-k="next" aria-label="Next.js">
+          <rect class="box" x="20" y="74" width="330" height="48" rx="8"/><text x="185" y="104" text-anchor="middle" font-size="15" font-weight="700">Next.js: routes, build, deploy</text></g>
+        <g class="node zb" tabindex="0" role="button" data-k="react" aria-label="React">
+          <rect class="box" x="20" y="134" width="330" height="48" rx="8"/><text x="185" y="164" text-anchor="middle" font-size="15" font-weight="700">React: draws screens from components</text></g>
+        <g class="node zb" tabindex="0" role="button" data-k="ts" aria-label="TypeScript">
+          <rect class="box" x="20" y="194" width="330" height="48" rx="8"/><text x="185" y="224" text-anchor="middle" font-size="15" font-weight="700">TypeScript: JavaScript with types</text></g>
+        <g class="node zb" tabindex="0" role="button" data-k="js" aria-label="JavaScript">
+          <rect class="box" x="20" y="254" width="330" height="48" rx="8"/><text x="185" y="284" text-anchor="middle" font-size="15" font-weight="700">JavaScript: the language browsers run</text></g>
+
+        <g class="node ze" tabindex="0" role="button" data-k="leaflet" aria-label="Leaflet library">
+          <rect class="box" x="400" y="20" width="140" height="56" rx="8"/><text x="470" y="44" text-anchor="middle" font-size="14" font-weight="700">Leaflet</text><text x="470" y="62" text-anchor="middle" class="lbl">draws the map</text></g>
+        <g class="node ze" tabindex="0" role="button" data-k="supa" aria-label="supabase-js library">
+          <rect class="box" x="400" y="104" width="140" height="56" rx="8"/><text x="470" y="128" text-anchor="middle" font-size="14" font-weight="700">supabase-js</text><text x="470" y="146" text-anchor="middle" class="lbl">talks to the database</text></g>
+        <path class="edge e" d="M400 48 H350" /><path class="edge e" d="M400 132 L350 60"/>
+        <text x="470" y="190" text-anchor="middle" class="lbl">Libraries our pages call</text>
+      </svg></div>
+    </figure>
+    <div class="panel" id="layerPanel" aria-live="polite"></div>
+  </div>
+
+  <h3 style="margin:40px 0 14px">Nine words, nine pictures</h3>
+  <div class="grid g3" id="terms">
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="price: number is accepted; price = hi is flagged">
+      <text x="6" y="22" class="mono" font-size="12">price: number</text><path d="M128 16 l6 6 l12 -13" fill="none" stroke="var(--good)" stroke-width="3"/>
+      <text x="6" y="50" class="mono" font-size="12">price = "hi"</text><path d="M128 42 l12 12 M140 42 l-12 12" fill="none" stroke="var(--bad)" stroke-width="3"/></svg>
+      <h3>Language</h3><p>Words we write code in. We use <code>TypeScript</code>: JavaScript with types, so wrong data is flagged before it runs.</p></div>
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="Your code calls Leaflet and supabase-js like tools">
+      <rect class="ib" x="4" y="18" width="52" height="28" rx="6"/><text x="30" y="36" text-anchor="middle" font-size="11" font-weight="700">Your code</text>
+      <rect class="ie" x="92" y="6" width="62" height="22" rx="6"/><text x="123" y="21" text-anchor="middle" font-size="10" font-weight="700">Leaflet</text>
+      <rect class="ie" x="92" y="36" width="62" height="22" rx="6"/><text x="123" y="51" text-anchor="middle" font-size="10" font-weight="700">supabase-js</text>
+      <path class="edge" d="M56 28 L90 17" marker-end="url(#ah-b)"/><path class="edge" d="M56 38 L90 47" marker-end="url(#ah-b)"/><text x="62" y="14" class="lbl">calls</text></svg>
+      <h3>Library</h3><p>Code you call when you need it. <code>Leaflet</code> draws the map, <code>supabase-js</code> talks to the database.</p></div>
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="Next.js is a frame that holds and calls your pages">
+      <rect x="4" y="4" width="152" height="56" rx="8" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 4"/><text x="12" y="19" font-size="10" font-weight="700" style="fill:var(--accent)">Next.js</text>
+      <rect class="ib" x="12" y="28" width="40" height="24" rx="5"/><text x="32" y="44" text-anchor="middle" font-size="9">Home</text>
+      <rect class="ib" x="60" y="28" width="40" height="24" rx="5"/><text x="80" y="44" text-anchor="middle" font-size="9">Outdoor</text>
+      <rect class="ib" x="108" y="28" width="40" height="24" rx="5"/><text x="128" y="44" text-anchor="middle" font-size="9">Map</text></svg>
+      <h3>Framework</h3><p>A structure that organizes the project and calls your code. <code>Next.js</code> decides where pages live.</p></div>
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="A page made of a navbar, three event cards and a footer">
+      <rect x="4" y="4" width="66" height="56" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <rect class="ih" x="8" y="8" width="58" height="8" rx="2"/>
+      <rect class="ib" x="8" y="22" width="16" height="20" rx="2"/><rect class="ib" x="26" y="22" width="16" height="20" rx="2"/><rect class="ib" x="44" y="22" width="16" height="20" rx="2"/>
+      <rect class="ie" x="8" y="48" width="58" height="8" rx="2"/>
+      <text x="82" y="14" class="mono" font-size="10">Navbar</text><text x="82" y="36" class="mono" font-size="10">EventCard x3</text><text x="82" y="55" class="mono" font-size="10">Footer</text></svg>
+      <h3>Component</h3><p>A reusable piece of a page, like <code>EventCard</code>.</p></div>
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="The address /outdoor comes from the folder app/outdoor">
+      <rect x="4" y="4" width="152" height="20" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="16" y="18" class="mono" font-size="11">/outdoor</text>
+      <path class="edge" d="M80 38 V26" marker-end="url(#ah-b)"/>
+      <rect class="ib" x="4" y="38" width="152" height="22" rx="5"/><text x="12" y="53" class="mono" font-size="10">app/outdoor/page.tsx</text></svg>
+      <h3>Route</h3><p>The web address of a page. The folder <code>app/outdoor/</code> becomes <code>/outdoor</code>.</p></div>
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="Source files go through a build and become plain files">
+      <rect class="ib" x="4" y="6" width="40" height="14" rx="3"/><text x="24" y="17" text-anchor="middle" font-size="9" class="mono">.tsx</text>
+      <rect class="ib" x="4" y="25" width="40" height="14" rx="3"/><text x="24" y="36" text-anchor="middle" font-size="9" class="mono">.tsx</text>
+      <rect class="ib" x="4" y="44" width="40" height="14" rx="3"/><text x="24" y="55" text-anchor="middle" font-size="9" class="mono">.tsx</text>
+      <path class="edge" d="M52 32 H100" marker-end="url(#ah-b)"/><text x="76" y="26" text-anchor="middle" class="lbl">build</text>
+      <rect class="ih" x="110" y="6" width="46" height="14" rx="3"/><text x="133" y="17" text-anchor="middle" font-size="9" class="mono">.html</text>
+      <rect class="ih" x="110" y="25" width="46" height="14" rx="3"/><text x="133" y="36" text-anchor="middle" font-size="9" class="mono">.js</text>
+      <rect class="ih" x="110" y="44" width="46" height="14" rx="3"/><text x="133" y="55" text-anchor="middle" font-size="9" class="mono">.css</text></svg>
+      <h3>Build</h3><p>Turns our code into the final files. Run <code>npm run build</code>.</p></div>
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="Built files go to Vercel and become a live website">
+      <rect class="ih" x="4" y="20" width="38" height="24" rx="4"/><text x="23" y="36" text-anchor="middle" font-size="10">files</text>
+      <path class="edge" d="M44 32 H60" marker-end="url(#ah-h)"/>
+      <rect class="ih" x="62" y="14" width="44" height="36" rx="6"/><text x="84" y="36" text-anchor="middle" font-size="11" font-weight="700">Vercel</text>
+      <path class="edge" d="M108 32 H122" marker-end="url(#ah-h)"/>
+      <circle cx="140" cy="32" r="14" fill="none" stroke="currentColor" stroke-width="1.5"/><ellipse cx="140" cy="32" rx="6" ry="14" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="126" y1="32" x2="154" y2="32" stroke="currentColor" stroke-width="1.2"/></svg>
+      <h3>Deploy</h3><p>Puts the built files on the internet. Every merge to <code>main</code> deploys on Vercel.</p></div>
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="A database holding two tables">
+      <path class="ie" d="M10 14 v34 a22 7 0 0 0 44 0 v-34"/><ellipse class="ie" cx="32" cy="14" rx="22" ry="7"/><path d="M10 30 a22 7 0 0 0 44 0" fill="none" stroke="var(--ext)" stroke-width="1.2"/>
+      <text x="68" y="26" class="mono" font-size="10">events</text><text x="68" y="46" class="mono" font-size="10">event_attendees</text></svg>
+      <h3>Database</h3><p>Shared storage that every user reads and writes. Supabase runs <code>PostgreSQL</code>.</p></div>
+
+    <div class="card term"><svg viewBox="0 0 160 64" role="img" aria-label="Anyone may read an event, only the creator may edit it">
+      <rect x="4" y="4" width="152" height="24" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="12" y="20" font-size="11">Read events: anyone</text><path d="M134 16 l5 5 l10 -11" fill="none" stroke="var(--good)" stroke-width="2.6"/>
+      <rect x="4" y="34" width="152" height="26" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="12" y="51" font-size="11">Edit: only the creator</text>
+      <rect x="136" y="44" width="14" height="11" rx="2" style="fill:var(--ext)"/><path d="M139 44 v-4 a4 4 0 0 1 8 0 v4" fill="none" stroke="var(--ext)" stroke-width="2"/></svg>
+      <h3>RLS</h3><p><code>Row Level Security</code>: rules in the database for who can read or change each row.</p></div>
+  </div>
+</section>
+
+<section class="slide" id="s4" data-name="Stack choice">
+  <div class="head">
+    <div class="kicker">04 · Choosing the stack</div>
+    <h2>Next.js looks like the best fit for our team and our map.</h2>
+    <p class="lede">We compared four options and looked for the one least likely to cause surprises later.</p>
+  </div>
+    <div class="tbl" style="margin-bottom:16px"><table>
+    <thead><tr><th>What we need</th><th class="pick">Next.js (static export) <span class="chosen-badge">Best fit</span></th><th>Vite + React</th><th>Plain HTML / JS</th><th>Python</th></tr></thead>
+    <tbody>
+      <tr><th>Map, no server, free hosting</th><td class="pick"><span class="y">&#10003; Yes</span></td><td><span class="y">&#10003; Yes</span></td><td><span class="y">&#10003; Yes</span></td><td><span class="n">&#10007; Needs a server</span></td></tr>
+      <tr><th>Easy for beginners</th><td class="pick"><span class="m">Medium</span></td><td><span class="m">Medium</span></td><td><span class="y">High</span></td><td><span class="m">Medium</span></td></tr>
+      <tr><th>Tidy with 4 people</th><td class="pick"><span class="y">High</span></td><td><span class="y">High</span></td><td><span class="n">Low</span></td><td><span class="m">Medium</span></td></tr>
+      <tr><th>AI tool results</th><td class="pick"><span class="y">High</span></td><td><span class="y">High</span></td><td><span class="m">Medium</span></td><td><span class="m">Medium</span></td></tr>
+      <tr><th>Chance of getting stuck</th><td class="pick"><span class="y">Low</span></td><td><span class="y">Low</span></td><td><span class="m">Medium</span></td><td><span class="n">High</span></td></tr>
+    </tbody></table></div>
+  <div class="panel">
+    <span class="tag">Why not Python?</span>
+    <h3>A great language, a poor fit for this project</h3>
+    <ul class="pylist"><li><span>1</span><span>The map runs in the browser, and browsers run JavaScript.</span></li><li><span>2</span><span><code>Flask</code>, <code>Django</code> and <code>Streamlit</code> need a running server, which we want to avoid.</span></li><li><span>3</span><span><code>Pyodide</code> (Python in the browser) is still experimental.</span></li></ul>
+    <p style="margin-top:10px">Python teammates still own filters, tests and sample data.</p>
+  </div>
+</section>
+
+<section class="slide" id="s5" data-name="Team fit">
+  <div class="head">
+    <div class="kicker">05 · Why it fits this team</div>
+    <h2>One lead who knows the stack, one language, and a folder each.</h2>
+  </div>
+  <div class="grid g4">
+    <div class="card reason"><svg viewBox="0 0 40 40" role="img" aria-label="Check mark in a circle"><circle cx="20" cy="20" r="17" class="ih"/><path d="M12 21 l6 6 l11 -13" fill="none" stroke="var(--host)" stroke-width="3"/></svg><h3>Our lead knows it</h3><p>Stuck? Help comes in minutes.</p></div>
+    <div class="card reason"><svg viewBox="0 0 40 40" role="img" aria-label="Chat bubble"><path class="ib" d="M5 8 h30 a3 3 0 0 1 3 3 v14 a3 3 0 0 1 -3 3 h-16 l-8 7 v-7 h-6 a3 3 0 0 1 -3 -3 v-14 a3 3 0 0 1 3 -3z"/><circle cx="14" cy="18" r="1.8" style="fill:var(--browser)"/><circle cx="20" cy="18" r="1.8" style="fill:var(--browser)"/><circle cx="26" cy="18" r="1.8" style="fill:var(--browser)"/></svg><h3>AI tools do well here</h3><p>Claude Code and Codex know this stack.</p></div>
+    <div class="card reason"><svg viewBox="0 0 40 40" role="img" aria-label="TS badge"><rect x="4" y="4" width="32" height="32" rx="6" class="ib"/><text x="20" y="26" text-anchor="middle" font-size="14" font-weight="800" style="fill:var(--browser)">TS</text></svg><h3>One language</h3><p>TypeScript everywhere.</p></div>
+    <div class="card reason"><svg viewBox="0 0 40 40" role="img" aria-label="Four separate squares"><rect x="4" y="4" width="14" height="14" rx="3" class="ib"/><rect x="22" y="4" width="14" height="14" rx="3" class="ie"/><rect x="4" y="22" width="14" height="14" rx="3" class="ih"/><rect x="22" y="22" width="14" height="14" rx="3" style="fill:var(--surface2);stroke:var(--muted);stroke-width:1.5"/></svg><h3>A folder each</h3><p>Few clashes in pull requests.</p></div>
+  </div>
+  <h3 style="margin:36px 0 12px">What it costs, and the fix</h3>
+  <div class="grid" style="gap:10px">
+    <div class="costrow"><span><b>Cost</b> · Install Node.js</span><span class="ar">&rarr;</span><span class="fix"><b>Fix</b> · README gives the version and two commands: <code>npm install</code>, <code>npm run dev</code></span></div>
+    <div class="costrow"><span><b>Cost</b> · Learn basic TSX</span><span class="ar">&rarr;</span><span class="fix"><b>Fix</b> · TSX is HTML written inside TypeScript. Start with the content pages</span></div>
+    <div class="costrow"><span><b>Cost</b> · The <code>.env</code> file</span><span class="ar">&rarr;</span><span class="fix"><b>Fix</b> · Copy <code>.env.example</code> to <code>.env.local</code> and fill in the Supabase URL and anon key</span></div>
+    <div class="costrow"><span><b>Cost</b> · <code>package-lock.json</code> conflicts</span><span class="ar">&rarr;</span><span class="fix"><b>Fix</b> · Only the tech lead adds packages</span></div>
+  </div>
+</section>
+
+<script>
+/* slide 3 layers */
+(function(){
+ const L={
+  pages:['Our code','Pages and components (.tsx)','The files we write. Example: <code>EventForm.tsx</code> is the form that creates an event.'],
+  next:['Framework','Next.js','Routes, build and export. Example: the folder <code>app/outdoor/</code> becomes the <code>/outdoor</code> page.'],
+  react:['Library','React','Draws screens from components. Example: the attendee count redraws when someone joins.'],
+  ts:['Language','TypeScript','JavaScript with types. Example: if an AI tool invents a column, the compiler flags it.'],
+  js:['Language','JavaScript','The only language browsers run. Everything above compiles down to it.'],
+  leaflet:['Library','Leaflet','Draws the map and reports clicks. Example: a click returns <code>lat</code> and <code>lng</code>.'],
+  supa:['Library','supabase-js','Lets the browser read and write our database. Example: <code>insert</code> one row into <code>events</code>.']};
+ const g=$$('#s3 .node'); const p=$('#layerPanel');
+ function show(k){ g.forEach(n=>n.classList.toggle('sel',n.dataset.k===k)); const [t,h,b]=L[k]; p.innerHTML='<span class="tag">'+t+'</span><h3>'+h+'</h3><p>'+b+'</p>'; }
+ g.forEach(n=>{n.addEventListener('click',()=>show(n.dataset.k));n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(n.dataset.k);}})});
+ show('next');
+})();
+</script>
+
+<section class="slide" id="s6" data-name="Architecture">
+  <div class="head">
+    <div class="kicker">06 · The architecture</div>
+    <h2>Browsers talk to Supabase directly. Vercel only hands out files.</h2>
+  </div>
+  <span class="try">Try it · click any box to see what it is</span>
+  <div class="demo" style="grid-template-columns:minmax(0,1fr);gap:16px">
+    <figure>
+      <div class="diagram">
+      <svg id="archSvg" viewBox="0 0 920 540" style="min-width:760px" role="img" aria-label="Architecture diagram. Inside the user's browser, a static Next.js site has content pages that read local JSON, and a map page with four components that share one Supabase client. The browser requests map tiles from OpenStreetMap and reads and writes directly to Supabase, which has Auth, RLS rules and a PostgreSQL database. Vercel serves the static files, GitHub triggers deploys, and there is no connection between Vercel and Supabase.">
+        <defs>
+          <marker id="ah-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><polygon class="ahb" points="0,0 10,5 0,10"/></marker>
+          <marker id="ah-e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><polygon class="ahe" points="0,0 10,5 0,10"/></marker>
+          <marker id="ah-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><polygon class="ahh" points="0,0 10,5 0,10"/></marker>
+        </defs>
+
+        <!-- zones -->
+        <rect class="zone-b" x="16" y="16" width="540" height="504" rx="14"/>
+        <text x="32" y="38" font-size="13" font-weight="700" class="t-b">1 · USER'S BROWSER</text>
+        <text x="32" y="53" class="lbl">static site: Next.js + React, written in TSX</text>
+        <rect class="zone-e" x="640" y="16" width="264" height="314" rx="14"/>
+        <text x="656" y="38" font-size="13" font-weight="700" class="t-e">2 · EXTERNAL SERVICES</text>
+        <rect class="zone-h" x="640" y="366" width="264" height="154" rx="14"/>
+        <text x="656" y="388" font-size="13" font-weight="700" class="t-h">3 · HOSTING AND CODE</text>
+
+        <!-- content pages -->
+        <g class="zb"><rect class="box" x="36" y="74" width="240" height="170" rx="10" style="fill:none;stroke-dasharray:3 4"/></g>
+        <text x="48" y="94" font-size="12" font-weight="700" class="t-b">CONTENT PAGES</text>
+        <g class="node zb" tabindex="0" role="button" data-k="content" aria-label="Content pages"><rect class="box" x="52" y="106" width="208" height="104" rx="8"/>
+          <text x="156" y="130" text-anchor="middle" font-size="13" font-weight="700" class="mono">app/*/page.tsx</text>
+          <text x="156" y="152" text-anchor="middle" class="lbl">Home · Outdoor · Indoor</text>
+          <text x="156" y="168" text-anchor="middle" class="lbl">Food · Weekend · About</text>
+          <text x="156" y="184" text-anchor="middle" class="lbl">How to Submit Ideas</text></g>
+        <path class="edge b" d="M156 244 V280" marker-end="url(#ah-b)"/>
+        <text x="166" y="266" class="lbl halo">reads at build</text>
+        <g class="node zb" tabindex="0" role="button" data-k="json" aria-label="Content JSON files"><rect class="box" x="52" y="282" width="208" height="52" rx="8"/>
+          <text x="156" y="305" text-anchor="middle" font-size="13" font-weight="700" class="mono">content/*.json</text>
+          <text x="156" y="322" text-anchor="middle" class="lbl">activity lists, editable by anyone</text></g>
+        <g class="node zb" tabindex="0" role="button" data-k="export" aria-label="Static export"><rect class="box" x="52" y="380" width="208" height="92" rx="8"/>
+          <text x="156" y="406" text-anchor="middle" font-size="13" font-weight="700">Static export</text>
+          <text x="156" y="426" text-anchor="middle" class="lbl">npm run build turns all of this</text>
+          <text x="156" y="442" text-anchor="middle" class="lbl">into plain HTML, JS and CSS</text>
+          <text x="156" y="458" text-anchor="middle" class="lbl">files. No server code.</text></g>
+
+        <!-- map page -->
+        <g class="zb"><rect class="box" x="300" y="74" width="240" height="282" rx="10" style="fill:none;stroke-dasharray:3 4"/></g>
+        <text x="312" y="94" font-size="12" font-weight="700" class="t-b">MAP PAGE · app/map/page.tsx</text>
+        <g class="node zb" tabindex="0" role="button" data-k="map" aria-label="EventMap"><rect class="box" x="316" y="106" width="208" height="46" rx="8"/><text x="420" y="126" text-anchor="middle" font-size="13" font-weight="700">EventMap</text><text x="420" y="142" text-anchor="middle" class="lbl">Leaflet, click = new pin</text></g>
+        <g class="node zb" tabindex="0" role="button" data-k="form" aria-label="EventForm"><rect class="box" x="316" y="164" width="208" height="46" rx="8"/><text x="420" y="184" text-anchor="middle" font-size="13" font-weight="700">EventForm</text><text x="420" y="200" text-anchor="middle" class="lbl">place, activity, day and time</text></g>
+        <g class="node zb" tabindex="0" role="button" data-k="join" aria-label="JoinButton"><rect class="box" x="316" y="222" width="208" height="46" rx="8"/><text x="420" y="242" text-anchor="middle" font-size="13" font-weight="700">JoinButton</text><text x="420" y="258" text-anchor="middle" class="lbl">adds you to the attendee list</text></g>
+        <g class="node zb" tabindex="0" role="button" data-k="filter" aria-label="DayFilter"><rect class="box" x="316" y="280" width="208" height="46" rx="8"/><text x="420" y="300" text-anchor="middle" font-size="13" font-weight="700">DayFilter</text><text x="420" y="316" text-anchor="middle" class="lbl">shows one day at a time</text></g>
+        <path class="edge b" d="M420 356 V380" marker-end="url(#ah-b)"/>
+        <text x="430" y="373" class="lbl halo">all four use</text>
+        <g class="node zb" tabindex="0" role="button" data-k="lib" aria-label="Shared Supabase client and types"><rect class="box" x="300" y="382" width="240" height="90" rx="8"/>
+          <text x="420" y="408" text-anchor="middle" font-size="13" font-weight="700" class="mono">lib/supabase.ts</text>
+          <text x="420" y="426" text-anchor="middle" class="lbl">one shared database client</text>
+          <text x="420" y="448" text-anchor="middle" font-size="13" font-weight="700" class="mono">lib/types.ts</text>
+          <text x="420" y="464" text-anchor="middle" class="lbl">one shared set of data types</text></g>
+
+        <!-- external -->
+        <g class="node ze" tabindex="0" role="button" data-k="osm" aria-label="OpenStreetMap"><rect class="box" x="660" y="58" width="224" height="62" rx="8"/><text x="772" y="84" text-anchor="middle" font-size="14" font-weight="700">OpenStreetMap</text><text x="772" y="102" text-anchor="middle" class="lbl">supplies the map pictures, free</text></g>
+        <rect class="box" x="660" y="140" width="224" height="178" rx="10" style="fill:none;stroke:var(--ext);stroke-width:1.5"/>
+        <text x="672" y="160" font-size="12" font-weight="700" class="t-e">SUPABASE</text>
+        <g class="node ze" tabindex="0" role="button" data-k="auth" aria-label="Supabase Auth"><rect class="box" x="676" y="170" width="192" height="40" rx="8"/><text x="772" y="187" text-anchor="middle" font-size="13" font-weight="700">Auth</text><text x="772" y="202" text-anchor="middle" class="lbl">anonymous session</text></g>
+        <g class="node ze" tabindex="0" role="button" data-k="rls" aria-label="Row Level Security"><rect class="box" x="676" y="218" width="192" height="40" rx="8"/><text x="772" y="235" text-anchor="middle" font-size="13" font-weight="700">RLS rules</text><text x="772" y="250" text-anchor="middle" class="lbl">who may read or write</text></g>
+        <g class="node ze" tabindex="0" role="button" data-k="db" aria-label="PostgreSQL database"><rect class="box" x="676" y="266" width="192" height="40" rx="8"/><text x="772" y="283" text-anchor="middle" font-size="13" font-weight="700">PostgreSQL</text><text x="772" y="298" text-anchor="middle" class="lbl mono" style="font-size:11px">events · event_attendees</text></g>
+
+        <!-- hosting -->
+        <g class="node zh" tabindex="0" role="button" data-k="vercel" aria-label="Vercel"><rect class="box" x="660" y="410" width="100" height="70" rx="8"/><text x="710" y="440" text-anchor="middle" font-size="14" font-weight="700">Vercel</text><text x="710" y="458" text-anchor="middle" class="lbl">serves files</text></g>
+        <g class="node zh" tabindex="0" role="button" data-k="github" aria-label="GitHub"><rect class="box" x="794" y="410" width="90" height="70" rx="8"/><text x="839" y="440" text-anchor="middle" font-size="14" font-weight="700">GitHub</text><text x="839" y="458" text-anchor="middle" class="lbl">repo + PRs</text></g>
+        <path class="edge h" d="M794 445 H762" marker-end="url(#ah-h)"/>
+        <text x="772" y="502" text-anchor="middle" class="lbl halo">merge to main = new deploy</text>
+
+        <!-- cross-zone edges -->
+        <path class="edge e" d="M524 124 L660 92" marker-end="url(#ah-e)"/>
+        <text x="598" y="96" text-anchor="middle" class="lbl halo">map tiles</text>
+        <path class="edge e" d="M540 392 L660 262" marker-end="url(#ah-e)"/>
+        <text x="598" y="336" text-anchor="middle" class="lbl halo">reads and</text>
+        <text x="598" y="351" text-anchor="middle" class="lbl halo">writes</text>
+        <path class="edge h" d="M660 450 H556" marker-end="url(#ah-h)"/>
+        <text x="608" y="441" text-anchor="middle" class="lbl halo">static files</text>
+
+        <!-- the missing link -->
+        <path class="edge x" d="M710 408 V334"/>
+        <path class="edge x" d="M702 345 L718 361 M718 345 L702 361" style="stroke-dasharray:none;stroke-width:2.4"/>
+        <text x="728" y="357" class="lbl halo" style="fill:var(--bad)">no connection</text>
+      </svg></div>
+      <figcaption>Blue boxes run in the visitor's browser. Amber boxes are external services. Green boxes are hosting and code. The red X marks the link that does not exist: Vercel never talks to Supabase.</figcaption>
+    </figure>
+    <div class="panel" id="archPanel" aria-live="polite"></div>
+  </div>
+  <div class="chips" style="margin-top:20px"><span class="chip">No custom server</span><span class="chip">No API routes</span><span class="chip">The public <code>anon</code> key is safe in the browser: RLS protects the data</span></div>
+</section>
+
+<section class="slide" id="s7" data-name="Data flow">
+  <div class="head">
+    <div class="kicker">07 · How data flows</div>
+    <h2>Four flows cover the whole app.</h2>
+  </div>
+  <span class="try">Try it · choose a flow and press Next</span>
+  <div class="seg" id="flowSeg" role="group" aria-label="Choose a flow" style="margin-bottom:14px">
+    <button data-f="A" aria-pressed="true">A · Open the site</button><button data-f="B" aria-pressed="false">B · Open the map</button><button data-f="C" aria-pressed="false">C · Create an event</button><button data-f="D" aria-pressed="false">D · Join an event</button>
+  </div>
+  <div class="diagram"><svg id="seqSvg" viewBox="0 0 800 400" style="min-width:680px" role="img" aria-label="Sequence diagram of the selected flow"></svg></div>
+  <div class="panel" id="seqPanel" style="margin-top:14px" aria-live="polite"></div>
+  <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center">
+    <button class="btn" id="seqPrev">Previous</button><button class="btn primary" id="seqNext">Next step</button><span class="mono" id="seqCount" style="color:var(--muted)"></span>
+  </div>
+  
+</section>
+
+<script>
+/* slide 6 */
+(function(){
+ const D={
+  content:['Browser · content pages','Content pages','One folder per address. Example: app/outdoor/page.tsx is the /outdoor page.'],
+  json:['Browser · data files','content/*.json','Activity lists as simple files anyone can edit. Example: { "name": "Sunset walk", "cost": "free" }'],
+  export:['Browser · build output','Static export','npm run build turns everything into plain files, so any host can serve them.'],
+  map:['Browser · map','EventMap','Wraps Leaflet and loads in the browser only (ssr: false). Example: a click returns lat 43.826, lng -111.790.'],
+  form:['Browser · create event','EventForm','Collects the details and inserts a row. Example: "Frisbee at the park", Saturday 6 pm.'],
+  join:['Browser · join','JoinButton','Inserts one row per person. The same person cannot join twice.'],
+  filter:['Browser · filter','DayFilter','Shows one day at a time, in America/Denver time (Rexburg is on Mountain Time).'],
+  lib:['Browser · shared code','lib/supabase.ts and lib/types.ts','One database client and one set of types. Example: an invented column makes the compiler complain.'],
+  osm:['External · free','OpenStreetMap','Supplies the map pictures. Free, no account.'],
+  auth:['External · Supabase','Auth','Gives each visitor a user id with signInAnonymously(). No password screen.'],
+  rls:['External · Supabase','RLS rules','Example: anyone can read events, but you can edit only the rows you created.'],
+  db:['External · Supabase','PostgreSQL database','Two tables: events and event_attendees. The schema lives in supabase/schema.sql.'],
+  vercel:['Hosting','Vercel','Serves the built files. Runs no code of ours and never talks to Supabase.'],
+  github:['Code','GitHub','Holds the repo and pull requests. Every merge to main redeploys.']};
+ const nodes=$$('#archSvg .node'), p=$('#archPanel');
+ function show(k){ nodes.forEach(n=>n.classList.toggle('sel',n.dataset.k===k)); const [t,h,b]=D[k]; p.innerHTML='<span class="tag">'+t+'</span><h3>'+h+'</h3><p>'+b+'</p>'; }
+ nodes.forEach(n=>{n.addEventListener('click',()=>show(n.dataset.k));n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(n.dataset.k);}})});
+ show('lib');
+})();
+
+/* slide 7 */
+(function(){
+ const ACT={B:{x:100,n:'Browser',c:'b'},V:{x:300,n:'Vercel',c:'h'},O:{x:500,n:'OpenStreetMap',c:'e'},S:{x:700,n:'Supabase',c:'e'}};
+ const F={
+  A:[['V','B','static HTML, JS, CSS','Files built in advance. Vercel runs no code of ours.','GET /outdoor'],
+     ['B','B','show page from local JSON','The lists are inside the built files, so there is no database call.','{ "name": "Sunset walk", "cost": "free" }']],
+  B:[['V','B','page + map code','The map loads in the browser only, because Leaflet needs the window.','dynamic(() => import("./EventMap"), { ssr: false })'],
+     ['B','O','request map tiles','Leaflet asks OpenStreetMap for the picture squares of the map.','GET tile.openstreetmap.org/{z}/{x}/{y}.png'],
+     ['B','S','sign in anonymously','One call creates a user id. No password screen.','supabase.auth.signInAnonymously()'],
+     ['B','S','select events, attendees','RLS lets everyone read these two tables.','supabase.from("events").select("*")'],
+     ['S','B','rows','Supabase answers the browser directly. Vercel is not involved.','[{ title: "Frisbee at the park", lat: 43.826, lng: -111.790 }]'],
+     ['B','B','draw pins, filter by day','The filter runs in the browser, in America/Denver time.','events.filter(e => dayOf(e.starts_at) === "Sat")']],
+  C:[['B','B','click map: lat and lng','Leaflet gives us the coordinates of the click.','{ lat: 43.826, lng: -111.790 }'],
+     ['B','B','fill in the form','Title, what people will do, place and time.','"Frisbee at the park", Sat 6 pm'],
+     ['B','S','insert into events','The row includes the user id from the session.','supabase.from("events").insert({ title, lat, lng, starts_at })'],
+     ['S','S','RLS check','Valid session? Does created_by match the user? If not, the row is refused.','auth.uid() = created_by'],
+     ['S','B','saved','The browser shows the new pin.','201 Created'],
+     ['S','B','others see it on refresh','Everyone reads the same table, so the pin appears for them too.','select * from events']],
+  D:[['B','B','click Join on a pin','The button knows the event id and the user id.','Join'],
+     ['B','S','insert into event_attendees','One row: (event_id, user_id).','insert({ event_id: "frisbee-01", user_id: "ana" })'],
+     ['S','S','composite key check','The pair must be unique, so joining twice is refused.','primary key (event_id, user_id)'],
+     ['S','B','ok, or already joined','The button updates.','first time: 201 Created   |   twice: error 23505 (duplicate key)'],
+     ['B','B','count = number of rows','There is no stored counter. The number is how many rows exist.','select count(*)  ->  3']]};
+ let flow='A', step=0;
+ const svg=$('#seqSvg'), P=$('#seqPanel');
+ function render(){
+  const msgs=F[flow]; let h='<defs><marker id="sq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><polygon class="ahx" points="0,0 10,5 0,10"/></marker></defs>';
+  Object.values(ACT).forEach(a=>{
+   const col=a.c==='b'?'var(--browser)':a.c==='e'?'var(--ext)':'var(--host)', soft=a.c==='b'?'var(--browser-soft)':a.c==='e'?'var(--ext-soft)':'var(--host-soft)';
+   h+='<line x1="'+a.x+'" y1="54" x2="'+a.x+'" y2="392" stroke="'+col+'" stroke-width="1.5" stroke-dasharray="4 5"/>';
+   h+='<rect x="'+(a.x-62)+'" y="12" width="124" height="40" rx="8" fill="'+soft+'" stroke="'+col+'" stroke-width="1.5"/><text x="'+a.x+'" y="37" text-anchor="middle" font-size="14" font-weight="700">'+a.n+'</text>';
+  });
+  msgs.forEach((m,i)=>{
+   const y=96+i*50, on=i===step, f=ACT[m[0]].x, t=ACT[m[1]].x, col=on?'var(--accent)':'currentColor', sw=on?3:1.6, op=on?1:.55;
+   h+='<g class="seqmsg" data-i="'+i+'" style="cursor:pointer;opacity:'+op+'">';
+   if(f===t){
+     h+='<path d="M'+f+' '+y+' h46 v22 h-44" fill="none" stroke="'+col+'" stroke-width="'+sw+'" marker-end="url(#sq)"/>';
+     h+='<text x="'+(f+56)+'" y="'+(y+15)+'" font-size="13" font-weight="'+(on?700:500)+'">'+m[2]+'</text>';
+   } else {
+     const x2=t>f?t-2:t+2;
+     h+='<line x1="'+f+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+sw+'" marker-end="url(#sq)"/>';
+     h+='<text x="'+((f+t)/2)+'" y="'+(y-8)+'" text-anchor="middle" font-size="13" font-weight="'+(on?700:500)+'" class="halo">'+m[2]+'</text>';
+   }
+   const cx=(f===t?f-18:(t>f?f+16:f-16));
+   h+='<circle cx="'+cx+'" cy="'+y+'" r="10" fill="'+(on?'var(--accent)':'var(--surface2)')+'" stroke="'+(on?'var(--accent)':'var(--line)')+'"/><text x="'+cx+'" y="'+(y+4)+'" text-anchor="middle" font-size="11" font-weight="700" style="fill:'+(on?'var(--accent-ink)':'var(--fg)')+'">'+(i+1)+'</text>';
+   h+='<rect x="'+(Math.min(f,t)-30)+'" y="'+(y-24)+'" width="'+(Math.abs(f-t)+100)+'" height="52" fill="transparent"/></g>';
+  });
+  svg.innerHTML=h;
+  $$('.seqmsg',svg).forEach(g=>g.addEventListener('click',()=>{step=+g.dataset.i;render();}));
+  const m=msgs[step];
+  P.innerHTML='<span class="tag">Step '+(step+1)+' of '+msgs.length+'</span><h3>'+ACT[m[0]].n+(m[0]===m[1]?' (itself)':' to '+ACT[m[1]].n)+': '+m[2]+'</h3><p>'+m[3]+'</p>'+(m[4]?'<code style="display:block;margin-top:10px;padding:8px 10px;white-space:pre-wrap;word-break:break-word">'+m[4].replace(/</g,'&lt;')+'</code>':'');
+  $('#seqCount').textContent='Step '+(step+1)+' / '+msgs.length;
+  $('#seqPrev').disabled=step===0; $('#seqNext').disabled=step===msgs.length-1;
+ }
+ $$('#flowSeg button').forEach(b=>b.onclick=()=>{flow=b.dataset.f;step=0;$$('#flowSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));render();});
+ $('#seqPrev').onclick=()=>{if(step>0){step--;render();}};
+ $('#seqNext').onclick=()=>{if(step<F[flow].length-1){step++;render();}};
+ render();
+})();
+</script>
+
+<section class="slide" id="s8" data-name="Data and login">
+  <div class="head">
+    <div class="kicker">08 · Data model and user access</div>
+    <h2>Two tables are enough. The attendee count is counted, not stored.</h2>
+  </div>
+  <figure>
+    <div class="diagram"><svg viewBox="0 0 760 330" style="min-width:640px" role="img" aria-label="Entity diagram. The events table has id, title, description, place_name, lat, lng, starts_at and created_by. The event_attendees table has event_id and user_id, which together form its primary key. event_attendees.event_id points to events.id. Both created_by and user_id point to Supabase's auth users.">
+      <g class="ze">
+        <rect class="box" x="20" y="20" width="250" height="216" rx="8"/><line x1="20" x2="270" y1="48" y2="48" stroke="var(--ext)" stroke-width="1.5"/>
+        <text x="145" y="40" text-anchor="middle" font-size="14" font-weight="700" class="mono">events</text>
+        <g class="mono" font-size="12.5">
+          <text x="34" y="70">id <tspan class="t-e">· primary key</tspan></text><text x="258" y="70" text-anchor="end" class="lbl">uuid</text>
+          <text x="34" y="92">title</text><text x="258" y="92" text-anchor="end" class="lbl">text</text>
+          <text x="34" y="114">description</text><text x="258" y="114" text-anchor="end" class="lbl">text</text>
+          <text x="34" y="136">place_name</text><text x="258" y="136" text-anchor="end" class="lbl">text</text>
+          <text x="34" y="158">lat</text><text x="258" y="158" text-anchor="end" class="lbl">number</text>
+          <text x="34" y="180">lng</text><text x="258" y="180" text-anchor="end" class="lbl">number</text>
+          <text x="34" y="202">starts_at</text><text x="258" y="202" text-anchor="end" class="lbl">timestamptz</text>
+          <text x="34" y="224">created_by</text><text x="258" y="224" text-anchor="end" class="lbl">uuid</text>
+        </g>
+        <rect class="box" x="430" y="20" width="270" height="118" rx="8"/><line x1="430" x2="700" y1="48" y2="48" stroke="var(--ext)" stroke-width="1.5"/>
+        <text x="565" y="40" text-anchor="middle" font-size="14" font-weight="700" class="mono">event_attendees</text>
+        <g class="mono" font-size="12.5">
+          <text x="444" y="70">event_id</text><text x="688" y="70" text-anchor="end" class="lbl">uuid</text>
+          <text x="444" y="92">user_id</text><text x="688" y="92" text-anchor="end" class="lbl">uuid</text>
+          <text x="444" y="120" class="t-e" font-size="11.5">primary key (event_id, user_id)</text>
+        </g>
+        <rect class="box" x="330" y="270" width="230" height="46" rx="8" style="stroke-dasharray:5 4"/>
+        <text x="445" y="291" text-anchor="middle" font-size="13" font-weight="700" class="mono">auth.users</text><text x="445" y="306" text-anchor="middle" class="lbl">managed by Supabase</text>
+      </g>
+      <path class="edge e" d="M430 66 H272" marker-end="url(#ah-e)"/><text x="351" y="58" text-anchor="middle" class="lbl halo">event_id = id</text>
+      <path class="edge e" d="M270 224 H300 V293 H328" marker-end="url(#ah-e)"/><text x="182" y="256" class="lbl halo" text-anchor="middle">created_by is a user</text>
+      <path class="edge e" d="M700 92 H730 V293 H562" marker-end="url(#ah-e)"/><text x="660" y="212" class="lbl halo" text-anchor="middle">user_id is a user</text>
+    </svg></div>
+    <figcaption>One event has many attendee rows. The pair (event_id, user_id) is unique.</figcaption>
+  </figure>
+
+  <h3 style="margin:34px 0 8px">Why the count is not a column</h3>
+  <p class="lede" style="margin:0 0 14px">Joining is an <code>insert</code> of one row. The count is <code>select count(*)</code>.</p>
+  <span class="try">Try it · join the example event</span>
+  <div class="demo">
+    <div class="card">
+      <h3>Example event: frisbee at the park</h3>
+      <p>Each button inserts one row into <code>event_attendees</code>.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn" data-u="Ana">Ana joins</button><button class="btn" data-u="Ben">Ben joins</button><button class="btn" data-u="Cam">Cam joins</button><button class="btn" id="joinReset">Reset</button>
+      </div>
+      <p id="joinMsg" style="margin-top:12px;min-height:3em" aria-live="polite"></p>
+    </div>
+    <div class="tbl"><table style="min-width:0"><thead><tr><th>event_id</th><th>user_id</th></tr></thead><tbody id="joinRows"></tbody>
+      <tfoot><tr><td colspan="2" style="font-weight:700" id="joinCount"></td></tr></tfoot></table></div>
+  </div>
+
+  <h3 style="margin:42px 0 12px">How visitors get a user id <span class="mono" style="font-size:.7rem;color:var(--ext);border:1px solid var(--ext);padding:2px 8px;border-radius:999px;vertical-align:middle">Decision pending</span></h3>
+  <figure><div class="diagram"><svg viewBox="0 0 760 232" style="min-width:640px" role="img" aria-label="Two sign-in journeys. Anonymous session takes two steps: open the app, type a nickname, done. Email login takes four steps: open the app, type an email, open the email, type the code, done.">
+    <text x="20" y="22" font-size="14" font-weight="700">Anonymous session + nickname</text><text x="250" y="22" class="lbl">recommended to start · 2 steps · calls signInAnonymously()</text>
+    <g class="zb"><rect class="box" x="20" y="34" width="120" height="44" rx="8"/><text x="80" y="61" text-anchor="middle" font-size="13">Open the app</text></g>
+    <path class="edge b" d="M140 56 H168" marker-end="url(#ah-b)"/>
+    <g class="zb"><rect class="box" x="170" y="34" width="120" height="44" rx="8"/><text x="230" y="61" text-anchor="middle" font-size="13">Type a nickname</text></g>
+    <path class="edge b" d="M290 56 H318" marker-end="url(#ah-b)"/>
+    <g class="zh"><rect class="box" x="320" y="34" width="120" height="44" rx="8"/><text x="380" y="61" text-anchor="middle" font-size="13" font-weight="700">Done</text></g>
+    <text x="20" y="102" class="lbl">Risk: clearing browser data loses your identity.</text>
+
+    <text x="20" y="140" font-size="14" font-weight="700">Email + 6-digit code</text><text x="190" y="140" class="lbl">4 steps · needs SMTP · calls signInWithOtp()</text>
+    <g class="zb"><rect class="box" x="20" y="152" width="120" height="44" rx="8"/><text x="80" y="179" text-anchor="middle" font-size="13">Open the app</text></g>
+    <path class="edge b" d="M140 174 H168" marker-end="url(#ah-b)"/>
+    <g class="zb"><rect class="box" x="170" y="152" width="120" height="44" rx="8"/><text x="230" y="179" text-anchor="middle" font-size="13">Type email</text></g>
+    <path class="edge b" d="M290 174 H318" marker-end="url(#ah-b)"/>
+    <g class="ze"><rect class="box" x="320" y="152" width="120" height="44" rx="8"/><text x="380" y="179" text-anchor="middle" font-size="13">Open the email</text></g>
+    <path class="edge e" d="M440 174 H468" marker-end="url(#ah-e)"/>
+    <g class="zb"><rect class="box" x="470" y="152" width="120" height="44" rx="8"/><text x="530" y="179" text-anchor="middle" font-size="13">Type the code</text></g>
+    <path class="edge b" d="M590 174 H618" marker-end="url(#ah-b)"/>
+    <g class="zh"><rect class="box" x="620" y="152" width="120" height="44" rx="8"/><text x="680" y="179" text-anchor="middle" font-size="13" font-weight="700">Done</text></g>
+    <text x="20" y="220" class="lbl">Risk: hourly email limits, and codes can land in spam.</text>
+  </svg></div><figcaption>An anonymous user can be upgraded to a real login later, keeping all their data.</figcaption></figure>
+</section>
+
+<section class="slide" id="s9" data-name="Repository">
+  <div class="head">
+    <div class="kicker">09 · The repository</div>
+    <h2>The repo is the source of truth for people and AI alike.</h2>
+  </div>
+  <span class="try">Try it · click the tree</span>
+  <div class="demo" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));align-items:start">
+    <div class="card" style="padding:12px"><div id="tree" class="mono" role="tree" aria-label="Repository structure"></div></div>
+    <div class="panel" id="treePanel" aria-live="polite"></div>
+  </div>
+
+  <h3 style="margin:36px 0 12px">How the rule files connect</h3>
+  <figure><div class="diagram"><svg viewBox="0 0 760 190" style="min-width:620px" role="img" aria-label="Claude Code reads CLAUDE.md, which only imports AGENTS.md. Codex reads AGENTS.md directly. AGENTS.md holds short rules and links to the docs folder.">
+    <g class="zh"><rect class="box" x="20" y="20" width="160" height="50" rx="8"/><text x="100" y="42" text-anchor="middle" font-size="13" font-weight="700" class="mono">CLAUDE.md</text><text x="100" y="58" text-anchor="middle" class="lbl">one line: @AGENTS.md</text>
+    <rect class="box" x="20" y="120" width="160" height="50" rx="8" style="visibility:hidden"/></g>
+    <g class="zh"><rect class="box" x="300" y="60" width="170" height="70" rx="8"/><text x="385" y="86" text-anchor="middle" font-size="14" font-weight="700" class="mono">AGENTS.md</text><text x="385" y="104" text-anchor="middle" class="lbl">short rules, 1 or 2 screens</text><text x="385" y="119" text-anchor="middle" class="lbl">+ links to /docs</text></g>
+    <g class="zb"><rect class="box" x="580" y="60" width="160" height="70" rx="8"/><text x="660" y="86" text-anchor="middle" font-size="14" font-weight="700" class="mono">/docs</text><text x="660" y="104" text-anchor="middle" class="lbl">architecture, data-model,</text><text x="660" y="119" text-anchor="middle" class="lbl">conventions, gotchas...</text></g>
+    <path class="edge h" d="M180 45 L298 80" marker-end="url(#ah-h)"/><text x="232" y="48" class="lbl halo" text-anchor="middle">imports</text>
+    <path class="edge h" d="M470 95 H578" marker-end="url(#ah-h)"/><text x="524" y="86" class="lbl halo" text-anchor="middle">details in</text>
+    <text x="20" y="150" class="lbl">Claude Code starts from CLAUDE.md.</text>
+    <text x="20" y="168" class="lbl">Codex starts from AGENTS.md. Both end up reading the same rules.</text>
+  </svg></div><figcaption>One set of rules, two entry points.</figcaption></figure>
+
+  <h3 style="margin:30px 0 12px">Rules written as "do not"</h3>
+  <div class="grid g3">
+    <div class="card"><p><strong>No API routes.</strong> Static export (<code>output: 'export'</code>) cannot run them.</p></div>
+    <div class="card"><p><strong>No new packages without asking.</strong> Only the tech lead edits <code>package.json</code>.</p></div>
+    <div class="card"><p><strong>No invented columns.</strong> <code>docs/data-model.md</code> is the truth.</p></div>
+    <div class="card"><p><strong>No Leaflet on the server.</strong> Load it with <code>dynamic(..., { ssr: false })</code>.</p></div>
+    <div class="card"><p><strong>No edits to</strong> <code>supabase/schema.sql</code> unless the lead asks.</p></div>
+    <div class="card"><p><strong>No merge</strong> without a passing <code>npm run build</code>.</p></div>
+  </div>
+  <h3 style="margin:30px 0 10px">A prompt anyone can copy</h3>
+  <div class="card"><code style="display:block;white-space:pre-wrap;padding:10px 12px">Read AGENTS.md and docs/features/events.md.
+Then build EventForm on a new branch called feature/event-form.</code></div>
+</section>
+
+<script>
+/* slide 8 join demo */
+(function(){
+ let rows=[]; const msg=$('#joinMsg');
+ function draw(){ $('#joinRows').innerHTML=rows.length?rows.map(r=>'<tr><td class="mono">frisbee-01</td><td class="mono">'+r+'</td></tr>').join(''):'<tr><td colspan="2" style="color:var(--muted)">No rows yet</td></tr>';
+  $('#joinCount').textContent='People going: '+rows.length+'  (counted from rows)'; }
+ $$('[data-u]').forEach(b=>b.onclick=()=>{const u=b.dataset.u;
+   if(rows.includes(u)){ msg.style.color='var(--bad)'; msg.textContent='Rejected: duplicate key (event_id, user_id), error 23505. '+u+' is already on the list, so the count stays the same.'; }
+   else { rows.push(u); msg.style.color='var(--good)'; msg.textContent='Inserted a row for '+u+'. The count went up because there is one more row.'; }
+   draw(); });
+ $('#joinReset').onclick=()=>{rows=[];msg.textContent='';draw();};
+ rows=['Ana']; draw(); msg.textContent='Ana is already on the list. Try "Ana joins" again.';
+})();
+/* slide 9 tree */
+(function(){
+ const T=[
+  [0,'app/','Folder','Lead + HTML teammate','One folder per web address. Example: app/outdoor/page.tsx is /outdoor.','dir'],
+  [1,'layout.tsx','File','Tech lead','Navbar and footer shared by every page.'],
+  [1,'page.tsx','File','HTML teammate','The Home page.'],
+  [1,'outdoor/ indoor/ food/ weekend/','Folders','HTML teammate','Content pages.'],
+  [1,'about/ submit-ideas/','Folders','HTML teammate','About, Contact, FAQ and How to Submit Ideas.'],
+  [1,'map/page.tsx','File','Tech lead','The "App" page with the map.'],
+  [0,'components/map/','Folder','Python teammates + lead','EventMap (lead), EventForm and JoinButton (Python A), DayFilter (Python B).'],
+  [0,'content/','Folder','HTML teammate','JSON lists of activities. Editing text here cannot break the map.'],
+  [0,'lib/','Folder','Tech lead','supabase.ts (the database client) and types.ts (data types).'],
+  [0,'supabase/schema.sql','File','Tech lead','The real schema and RLS rules. Change it only through the lead.'],
+  [0,'docs/','Folder','Lead writes, all read','architecture, data-model, conventions, git-workflow, gotchas, features.'],
+  [0,'AGENTS.md','File','Tech lead','Short rules for AI tools, plus links to /docs.'],
+  [0,'CLAUDE.md','File','Tech lead','Contains only <code>@AGENTS.md</code>.'],
+  [0,'README.md','File','Tech lead','Five-step setup, commands, example prompts.'],
+  [0,'.env.example','File','Tech lead','Variable names to copy into .env.local. Never real values.']];
+ const tree=$('#tree'), P=$('#treePanel');
+ T.forEach((t,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('role','treeitem');
+   b.style.cssText='display:block;width:100%;text-align:left;border:0;background:transparent;padding:5px 8px;border-radius:6px;font-family:inherit;font-size:.84rem;padding-left:'+(8+t[0]*20)+'px';
+   b.textContent=(t[2].startsWith('Folder')?'▸ ':'· ')+t[1]; b.onclick=()=>pick(i); tree.appendChild(b);});
+ function pick(i){ $$('#tree button').forEach((b,j)=>{b.style.background=j===i?'var(--accent-soft)':'transparent';b.style.fontWeight=j===i?'700':'400';});
+  const t=T[i]; P.innerHTML='<span class="tag">'+t[2]+' · owner: '+t[3]+'</span><h3 class="mono" style="font-size:1rem">'+t[1]+'</h3><p>'+t[4]+'</p>'; }
+ pick(5);
+})();
+</script>
+
+<section class="slide" id="s10" data-name="Plan">
+  <div class="head">
+    <div class="kicker">10 · Roles and sprints</div>
+    <h2>Each person owns a different folder, and every change goes through a pull request.</h2>
+    </div>
+  <span class="try">Try it · pick a role</span>
+  <div class="seg" id="roleSeg" role="group" aria-label="Pick a role" style="margin-bottom:14px">
+    <button data-r="lead" aria-pressed="true">Tech lead</button><button data-r="html" aria-pressed="false">HTML teammate</button><button data-r="pyA" aria-pressed="false">Python teammate A</button><button data-r="pyB" aria-pressed="false">Python teammate B</button>
+  </div>
+  <div class="panel" id="rolePanel" aria-live="polite"></div>
+
+  <h3 style="margin:36px 0 8px">Four sprints, each one leaves something that works</h3>
+  <span class="try">Try it · click a sprint</span>
+  <div class="grid g4" id="sprints" role="group" aria-label="Sprints"></div>
+  <div class="panel" id="sprintPanel" style="margin-top:14px" aria-live="polite"></div>
+
+  <h3 style="margin:36px 0 12px">Git flow: protected main, one branch per feature</h3>
+  <figure><div class="diagram"><svg viewBox="0 0 760 230" style="min-width:640px" role="img" aria-label="Git flow. A protected main branch runs across the top. Three feature branches split off below it, each with commits, and each merges back into main through a pull request after review.">
+    <line x1="30" y1="40" x2="740" y2="40" stroke="var(--host)" stroke-width="3"/>
+    <text x="30" y="24" font-size="13" font-weight="700" class="t-h mono">main (protected)</text>
+    <g fill="var(--host)"><circle cx="60" cy="40" r="6"/><circle cx="330" cy="40" r="6"/><circle cx="560" cy="40" r="6"/><circle cx="700" cy="40" r="6"/></g>
+
+    <path d="M60 40 C80 40 80 100 110 100 H250" fill="none" stroke="var(--browser)" stroke-width="2.4"/>
+    <path d="M250 100 C290 100 290 40 330 40" class="edge b" marker-end="url(#ah-b)"/>
+    <circle cx="140" cy="100" r="5" fill="var(--browser)"/><circle cx="200" cy="100" r="5" fill="var(--browser)"/>
+    <text x="110" y="122" class="lbl mono">feature/content-pages</text>
+    <text x="296" y="82" class="lbl halo">PR + review</text>
+
+    <path d="M60 40 C90 40 90 150 130 150 H420" fill="none" stroke="var(--browser)" stroke-width="2.4"/>
+    <path d="M420 150 C480 150 500 40 560 40" class="edge b" marker-end="url(#ah-b)"/>
+    <circle cx="190" cy="150" r="5" fill="var(--browser)"/><circle cx="260" cy="150" r="5" fill="var(--browser)"/><circle cx="340" cy="150" r="5" fill="var(--browser)"/>
+    <text x="130" y="172" class="lbl mono">feature/event-form</text>
+    <text x="496" y="106" class="lbl halo">PR + review</text>
+
+    <path d="M330 40 C350 40 350 200 380 200 H600" fill="none" stroke="var(--browser)" stroke-width="2.4"/>
+    <path d="M600 200 C650 200 660 40 700 40" class="edge b" marker-end="url(#ah-b)"/>
+    <circle cx="450" cy="200" r="5" fill="var(--browser)"/><circle cx="530" cy="200" r="5" fill="var(--browser)"/>
+    <text x="380" y="222" class="lbl mono">feature/day-filter</text>
+    <text x="650" y="130" class="lbl halo">PR + review</text>
+  </svg></div><figcaption>Branch from main, open a pull request, pass the build and review, merge. Each merge redeploys.</figcaption></figure>
+</section>
+
+<section class="slide" id="s11" data-name="Risks">
+  <div class="head">
+    <div class="kicker">11 · Risks and next steps</div>
+    <h2>We prove the risky parts in sprint 0.</h2>
+  </div>
+  <span class="try">Try it · tick each check as we pass it</span>
+  <div class="grid" style="max-width:560px">
+    <div class="card">
+      <h3>Sprint 0 walking skeleton</h3><p style="color:var(--muted)">A tiny version running on the real internet.</p>
+      <div id="checks" style="display:grid;gap:10px;margin-top:12px">
+        <label><input type="checkbox"> The site is deployed on Vercel</label>
+        <label><input type="checkbox"> The map loads in production, not only on <code>localhost</code></label>
+        <label><input type="checkbox"> A click on the map inserts a row into <code>events</code></label>
+        <label><input type="checkbox"> That pin is visible from another browser</label>
+        <label><input type="checkbox"> A second session can insert into <code>event_attendees</code></label>
+      </div>
+      <div style="margin-top:16px;background:var(--surface2);border-radius:999px;height:12px;overflow:hidden"><div id="bar" style="height:100%;width:0;background:var(--accent);transition:width .3s"></div></div>
+      <p id="barTxt" style="margin-top:8px;color:var(--muted)" aria-live="polite"></p>
+    </div>
+    
+  </div>
+
+  <h3 style="margin:36px 0 12px">Known pitfalls and their fixes</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>What goes wrong</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><th>The map page crashes the build</th><td>Load Leaflet client-only: <code>dynamic(() =&gt; import(...), { ssr: false })</code></td></tr>
+      <tr><th>Marker icons show as broken images</th><td>Set the icon URLs with <code>L.Icon.Default.mergeOptions(...)</code> (kept in <code>docs/gotchas.md</code>)</td></tr>
+      <tr><th>An evening event shows on the wrong day</th><td>Store <code>timestamptz</code> and group days in <code>America/Denver</code></td></tr>
+      <tr><th>Anonymous visitors can write when we did not expect it</th><td>Anonymous users get the <code>authenticated</code> role. Test the RLS policies early</td></tr>
+      <tr><th>Supabase stops answering after a quiet week</th><td>Free projects pause after about a week. Resume with one click</td></tr>
+      <tr><th>Email codes never arrive</th><td>Test SMTP delivery in sprint 0, or stay anonymous</td></tr>
+      <tr><th>The build fails on an API route</th><td><code>output: 'export'</code> has no server. Call Supabase from the browser with <code>supabase-js</code></td></tr>
+    </tbody></table></div>
+
+  <h3 style="margin:42px 0 12px">Next steps</h3>
+  <ol class="grid g3" style="list-style:none;padding:0;margin:0">
+    <li class="card"><span class="mono" style="color:var(--accent)">Step 1</span><h3>Decide the login type</h3><p>Anonymous first, email code later.</p></li>
+    <li class="card"><span class="mono" style="color:var(--accent)">Step 2</span><h3>Create the repo with its docs</h3><p>README, AGENTS.md, CLAUDE.md, /docs.</p></li>
+    <li class="card"><span class="mono" style="color:var(--accent)">Step 3</span><h3>Build the walking skeleton</h3><p>The tech lead proves the five checks.</p></li>
+  </ol>
+</section>
+
+</main>
+
+<style>
+summary{cursor:pointer}
+details[open] summary{margin-bottom:0}
+.halo{paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.ahb{fill:var(--browser)}.ahe{fill:var(--ext)}.ahh{fill:var(--host)}.ahx{fill:var(--fg)}
+#checks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+#checks input{width:18px;height:18px;margin-top:3px;accent-color:var(--accent)}
+.sprint{text-align:left}
+.sprint[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sprint .n{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}
+.fold{padding:6px 10px;border-radius:6px;background:var(--surface2);word-break:break-word}
+</style>
+
+<script>
+/* slide 10 roles and sprints */
+(function(){
+ const R={
+  lead:['Tech lead','Sets up the repo, Supabase and RLS, builds EventMap, writes the docs, reviews every pull request and owns the deploy.','The riskiest parts go to the person who has shipped this stack.',['lib/','supabase/schema.sql','components/map/EventMap','docs/ and AGENTS.md','app/map/page.tsx']],
+  html:['HTML teammate','Builds the content pages and edits the JSON lists.','These pages cannot break the map or the database.',['app/*/page.tsx (content pages)','content/*.json']],
+  pyA:['Python teammate A','Builds the create-event form and the Join button.','A self-contained piece with clear inputs and outputs.',['components/map/EventForm','components/map/JoinButton']],
+  pyB:['Python teammate B','Builds the day filter, tests the date logic and prepares sample data.','Pure logic that translates well from Python.',['components/map/DayFilter','tests for date logic','sample events data']]};
+ function pickR(k){ $$('#roleSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r===k)); const r=R[k];
+  $('#rolePanel').innerHTML='<span class="tag">Role</span><h3>'+r[0]+'</h3><p>'+r[1]+'</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px" class="mono">'+r[3].map(f=>'<span class="fold">'+f+'</span>').join('')+'</div>'; }
+ $$('#roleSeg button').forEach(b=>b.onclick=()=>pickR(b.dataset.r)); pickR('lead');
+ const S=[
+  ['Sprint 0','Foundations','Create the repo and Next.js, set up Supabase, deploy an empty site, write the docs, build the walking skeleton.','Done when: the five checks on slide 11 pass.'],
+  ['Sprint 1','Content and sample map','Content pages go up. The map shows example events.','Done when: all pages exist and the map shows sample pins.'],
+  ['Sprint 2','The app comes alive','Session or login, create an event by clicking the map, join an event.','Done when: two people on two devices can create and join.'],
+  ['Sprint 3','Filter and polish','Day filter, phone layout, FAQ, cleanup.','Done when: someone new can use it on a phone.']];
+ const sp=$('#sprints');
+ S.forEach((s,i)=>{const b=document.createElement('button');b.className='card sprint';b.innerHTML='<span class="n">'+s[0]+'</span><h3>'+s[1]+'</h3>';b.onclick=()=>pickS(i);sp.appendChild(b);});
+ function pickS(i){ $$('#sprints .sprint').forEach((b,j)=>b.setAttribute('aria-pressed',j===i)); const s=S[i]; $('#sprintPanel').innerHTML='<span class="tag">'+s[0]+'</span><h3>'+s[1]+'</h3><p>'+s[2]+'</p>'; }
+ pickS(0);
+})();
+/* slide 11 checklist */
+(function(){
+ const boxes=$$('#checks input'); let saved=[];
+ try{ saved=JSON.parse(localStorage.getItem('walkingSkeleton')||'[]'); }catch(e){}
+ boxes.forEach((b,i)=>{ b.checked=!!saved[i]; b.addEventListener('change',upd); });
+ function upd(){ const n=boxes.filter(b=>b.checked).length; $('#bar').style.width=(n/boxes.length*100)+'%';
+  $('#barTxt').textContent=n===boxes.length?'All five pass. Sprint 1 can start.':n+' of '+boxes.length+' checks passed.';
+  try{ localStorage.setItem('walkingSkeleton',JSON.stringify(boxes.map(b=>b.checked))); }catch(e){} }
+ upd();
+})();
+/* top tabs + scroll spy */
+(function(){
+ const slides=$$('.slide'), tabs=$('#tabs'), links=[];
+ slides.forEach((s,i)=>{const li=document.createElement('li'),a=document.createElement('a');a.href='#'+s.id;a.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b>'+s.dataset.name;li.appendChild(a);tabs.appendChild(li);links.push(a);});
+ function on(i){ links.forEach((a,j)=>{a.classList.toggle('on',j===i); if(j===i) a.removeAttribute('aria-current'); }); links[i].setAttribute('aria-current','true'); const l=links[i]; const box=tabs; if(l.offsetLeft<box.scrollLeft||l.offsetLeft+l.offsetWidth>box.scrollLeft+box.clientWidth) box.scrollTo({left:l.offsetLeft-20,behavior:'smooth'}); }
+ on(0);
+ if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting) on(slides.indexOf(e.target)); }); },{rootMargin:'-30% 0px -60% 0px'});
+  slides.forEach(s=>io.observe(s));
+ }
+})();
+</script>
+
+</body></html>
