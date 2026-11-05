@@ -1,22 +1,22 @@
 // Owner: HTML teammate
 import Link from "next/link";
-import { PinIcon, UsersIcon, SearchIcon } from "@/components/icons";
+import { PinIcon, SearchIcon, IdeaIcon } from "@/components/icons";
 
 const steps = [
   {
     Icon: SearchIcon,
-    title: "Find something to do",
-    text: "Browse outdoor trips, indoor hangouts, food spots and weekend events around Rexburg.",
+    title: "Browse local spots",
+    text: "Browse indoor, outdoor and food spots around Rexburg.",
   },
   {
     Icon: PinIcon,
-    title: "Drop a pin",
-    text: "Tap the map to create an event. Pick the place, the activity and a day and time.",
+    title: "Find what’s nearby",
+    text: "See spots on the map and find what’s close to you.",
   },
   {
-    Icon: UsersIcon,
-    title: "Bring people along",
-    text: "Others can join your event, and you can see how many are going before you head out.",
+    Icon: IdeaIcon,
+    title: "Share a great spot",
+    text: "Know a great spot? Sign in and suggest it; our team reviews every idea.",
   },
 ];
 
@@ -24,7 +24,7 @@ const categories = [
   { href: "/outdoor", label: "Outdoor" },
   { href: "/indoor", label: "Indoor" },
   { href: "/food", label: "Food & Treats" },
-  { href: "/weekend", label: "Weekend Events" },
+  { href: "/map", label: "Activity map" },
 ];
 
 export default function HomePage() {
@@ -41,8 +41,8 @@ export default function HomePage() {
               Find your next adventure, and someone to go with.
             </h1>
             <p className="mt-4 max-w-xl text-lg text-emerald-100">
-              A local guide to fun things to do around town, plus a live map where you can plan
-              outings and see who&apos;s coming.
+              A local guide to fun things to do around town, plus an activity map to find great
+              spots around Rexburg.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -83,9 +83,10 @@ export default function HomePage() {
               Pick your kind of adventure
             </h2>
             <p className="mt-3 max-w-xl text-emerald-900/80">
-              Find a cozy indoor plan or get out and explore the places around Rexburg.
+              Find a cozy indoor plan, explore outdoors, or discover a new place to eat around
+              Rexburg.
             </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
               <Link
                 href="/indoor"
                 className="rounded-2xl bg-amber-50 p-6 shadow-sm hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700"
@@ -102,6 +103,15 @@ export default function HomePage() {
                 <h3 className="text-lg font-bold">Outdoor Activities</h3>
                 <p className="mt-2 text-emerald-900/80">
                   Explore local parks, rivers, and wide-open Idaho scenery.
+                </p>
+              </Link>
+              <Link
+                href="/food"
+                className="rounded-2xl bg-amber-50 p-6 shadow-sm hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700"
+              >
+                <h3 className="text-lg font-bold">Food &amp; Treats</h3>
+                <p className="mt-2 text-emerald-900/80">
+                  Find a favorite bite, a sweet treat, or a new place to try.
                 </p>
               </Link>
             </div>
