@@ -3,6 +3,7 @@
 // Staff-only page: review the ideas members suggest. Approving publishes the activity on the map.
 // The role check below only hides the page. The real protection is the RLS policies on public.activities.
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -15,12 +16,23 @@ import {
   validateActivityName,
   validateAddress,
   validateDescription,
+  validateLocation,
   validateUrl,
 } from "@/lib/suggestions";
 import type { Activity, ActivityCategory, ActivityStatus } from "@/lib/types";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
 import { errorClass, inputClass, primaryClass, secondaryClass } from "@/components/auth/styles";
 import StatusBadge from "@/components/suggestions/StatusBadge";
+import type { Point } from "@/components/suggestions/LocationPicker";
+
+const LocationPicker = dynamic(() => import("@/components/suggestions/LocationPicker"), {
+  ssr: false,
+  loading: () => (
+    <div className="grid h-72 place-items-center bg-emerald-900 text-amber-100 md:h-96" role="status">
+      Loading the map…
+    </div>
+  ),
+});
 
 type Row = Pick<
   Activity,
@@ -66,6 +78,8 @@ function ReviewCard({ row, author, onChanged }: { row: Row; author: string; onCh
   const [description, setDescription] = useState(row.description ?? "");
   const [address, setAddress] = useState(row.address ?? "");
   const [website, setWebsite] = useState(row.website_url ?? "");
+  const [location, setLocation] = useState<Point>({ lat: row.lat, lon: row.lon });
+  const [recenterKey, setRecenterKey] = useState(0);
   const [reason, setReason] = useState("");
 
   const websiteLink = safeLink(row.website_url);
@@ -92,7 +106,7 @@ function ReviewCard({ row, author, onChanged }: { row: Row; author: string; onCh
   function saveEdit(event: FormEvent) {
     event.preventDefault();
     const problem =
-      validateActivityName(name) ?? validateDescription(description) ?? validateAddress(address) ?? validateUrl(website);
+      validateActivityName(name) ?? validateDescription(description) ?? validateAddress(address) ?? validateUrl(website) ?? validateLocation(location);
     if (problem) {
       setError(problem);
       return;
@@ -103,6 +117,8 @@ function ReviewCard({ row, author, onChanged }: { row: Row; author: string; onCh
       description: description.trim() || null,
       address: address.trim() || null,
       website_url: website.trim() || null,
+      lat: location.lat,
+      lon: location.lon,
     });
   }
 
@@ -137,9 +153,15 @@ function ReviewCard({ row, author, onChanged }: { row: Row; author: string; onCh
           <input id={`a-${row.id}`} value={address} maxLength={ADDRESS_MAX} onChange={(e) => setAddress(e.target.value)} className={`mt-2 ${inputClass}`} />
           <label htmlFor={`w-${row.id}`} className="mt-4 block text-sm font-bold">Website</label>
           <input id={`w-${row.id}`} value={website} onChange={(e) => setWebsite(e.target.value)} className={`mt-2 ${inputClass}`} />
+          <p className="mt-4 text-sm font-bold">Pin</p>
+          <div className="mt-2 overflow-hidden rounded-2xl border-2 border-emerald-900">
+            <LocationPicker value={location} onChange={setLocation} centerOnValue recenterKey={recenterKey} />
+          </div>
+          <p className="mt-2 text-sm text-emerald-900/80">Tap the map to move the pin. {location.lat.toFixed(5)}, {location.lon.toFixed(5)}</p>
+          <button type="button" className={`mt-2 ${secondaryClass} sm:w-auto`} onClick={() => { setLocation({ lat: row.lat, lon: row.lon }); setRecenterKey((key) => key + 1); }}>Reset pin</button>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <button type="submit" className={`${primaryClass} sm:w-auto`} disabled={busy}>{busy ? "Saving…" : "Save changes"}</button>
-            <button type="button" className={`${secondaryClass} sm:w-auto`} onClick={() => { setMode("view"); setError(""); }}>Cancel</button>
+            <button type="button" className={`${secondaryClass} sm:w-auto`} onClick={() => { setName(row.name); setCategory(row.category); setDescription(row.description ?? ""); setAddress(row.address ?? ""); setWebsite(row.website_url ?? ""); setLocation({ lat: row.lat, lon: row.lon }); setMode("view"); setError(""); }}>Cancel</button>
           </div>
         </form>
       ) : (
@@ -183,7 +205,7 @@ function ReviewCard({ row, author, onChanged }: { row: Row; author: string; onCh
           {status === "approved" && (
             <button type="button" className={`${secondaryClass} sm:w-auto`} disabled={busy} onClick={() => void change({ status: "pending" })}>Unpublish</button>
           )}
-          <button type="button" className={`${secondaryClass} sm:w-auto`} onClick={() => { setMode("edit"); setError(""); }}>Edit</button>
+          <button type="button" className={`${secondaryClass} sm:w-auto`} onClick={() => { setName(row.name); setCategory(row.category); setDescription(row.description ?? ""); setAddress(row.address ?? ""); setWebsite(row.website_url ?? ""); setLocation({ lat: row.lat, lon: row.lon }); setMode("edit"); setError(""); }}>Edit</button>
         </div>
       )}
     </li>
