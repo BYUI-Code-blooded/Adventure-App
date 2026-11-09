@@ -116,6 +116,7 @@ export function ExploreIcon(props: IconProps) {
 export const navLinks = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/map", label: "Map", Icon: MapIcon },
+  { href: "/weekend", label: "Weekend Events", Icon: CalendarIcon },
   // { href: "/submit-ideas", label: "Submit Ideas", Icon: IdeaIcon },
   { href: "/about", label: "About", Icon: InfoIcon },
 ];
