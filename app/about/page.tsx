@@ -1,41 +1,6 @@
 import Link from "next/link";
-
-const team = [
-  {
-    name: "Team member name",
-    role: "Project team",
-    bio: "Add a short introduction here: what you worked on and what you enjoy doing around Rexburg.",
-    favorite: "Add a favorite Rexburg spot",
-    location: "",
-    initials: "01",
-  },
-  {
-    name: "Team member name",
-    role: "Project team",
-    bio: "Share a little about yourself, your part in the project and a local activity you recommend.",
-    favorite: "Add a favorite Rexburg spot",
-    location: "",
-    initials: "02",
-  },
-  {
-    name: "Team member name",
-    role: "Project team",
-    bio: "Tell visitors what you helped create and where you like to go when you have free time.",
-    favorite: "Add a favorite Rexburg spot",
-    location: "",
-    initials: "03",
-  },
-  {
-    name: "Team member name",
-    role: "Project team",
-    bio: "Introduce yourself, share what you contributed and mention a Rexburg adventure you enjoy.",
-    favorite: "Add a favorite Rexburg spot",
-    location: "",
-    initials: "04",
-  },
-];
-
-const mapsEmbedKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY;
+import team from "@/content/team.json";
+import TeamCard from "@/components/about/TeamCard";
 
 export default function AboutPage() {
   return (
@@ -71,53 +36,11 @@ export default function AboutPage() {
           <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
             <h2 className="text-2xl font-extrabold md:text-3xl">The people who made it</h2>
             <p className="mt-3 max-w-xl text-emerald-900/80">
-              Get to know the people building the guide. Add a photo, name and personal details
-              for each teammate.
+              Meet the four students who built this guide, and see where we like to go around town.
             </p>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-8 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {team.map((member) => (
-                <li key={member.initials} className="overflow-hidden rounded-2xl bg-amber-50 shadow-sm">
-                  <div
-                    role="img"
-                    aria-label={`Photo placeholder for ${member.name.toLowerCase()}`}
-                    className="grid aspect-[4/3] place-items-center bg-emerald-900 text-amber-300"
-                  >
-                    <div className="text-center">
-                      <span className="mx-auto grid size-16 place-items-center rounded-full border-2 border-amber-300 text-xl font-extrabold">
-                        {member.initials}
-                      </span>
-                      <span className="mt-3 block text-sm font-semibold text-emerald-100">
-                        Photo placeholder
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <p className="text-sm font-bold text-emerald-700">{member.role}</p>
-                    <h3 className="mt-2 text-lg font-bold">{member.name}</h3>
-                    <p className="mt-2 text-emerald-900/80">{member.bio}</p>
-                    <div className="mt-5 rounded-2xl bg-emerald-100/60 p-4">
-                      <p className="text-sm font-bold text-emerald-700">Favorite Rexburg spot</p>
-                      <p className="mt-1 font-bold text-emerald-950">{member.favorite}</p>
-                      <p className="mt-2 text-sm text-emerald-900/80">
-                        Add a sentence about why they recommend this place.
-                      </p>
-                    </div>
-                    {member.location && mapsEmbedKey ? (
-                      <iframe
-                        title={`Street View of ${member.favorite}`}
-                        src={`https://www.google.com/maps/embed/v1/streetview?key=${encodeURIComponent(mapsEmbedKey)}&location=${encodeURIComponent(member.location)}`}
-                        className="mt-4 aspect-video w-full rounded-2xl border-0"
-                        loading="lazy"
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <div className="mt-4 grid aspect-video place-items-center rounded-2xl border-2 border-dashed border-emerald-700/40 bg-amber-50 p-4 text-center text-sm text-emerald-900/80">
-                        Street View preview appears when a spot and Maps API key are added.
-                      </div>
-                    )}
-                  </div>
-                </li>
+                <TeamCard key={member.name} member={member} />
               ))}
             </ul>
             <div className="mt-12">
@@ -132,14 +55,54 @@ export default function AboutPage() {
                 </li>
                 <li className="rounded-2xl bg-amber-50 p-5 shadow-sm">
                   <p className="text-sm font-bold text-emerald-700">Made by</p>
-                  <p className="mt-2 text-lg font-extrabold">Local students</p>
+                  <p className="mt-2 text-lg font-extrabold">BYU-Idaho students (CSE 170)</p>
                 </li>
                 <li className="rounded-2xl bg-amber-50 p-5 shadow-sm">
-                  <p className="text-sm font-bold text-emerald-700">Here for</p>
-                  <p className="mt-2 text-lg font-extrabold">More shared adventures</p>
+                  <p className="text-sm font-bold text-emerald-700">Places in the guide</p>
+                  <p className="mt-2 text-lg font-extrabold">Indoor, Outdoor and Food</p>
                 </li>
               </ul>
             </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-12 md:py-16">
+          <h2 className="text-2xl font-extrabold md:text-3xl">Frequently asked questions</h2>
+          <div className="mt-8 grid gap-4">
+            <details className="rounded-2xl bg-amber-50 p-6 shadow-sm">
+              <summary className="cursor-pointer font-bold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700">
+                Is it free to use?
+              </summary>
+              <p className="mt-3 text-emerald-900/80">Yes, it&apos;s completely free.</p>
+            </details>
+            <details className="rounded-2xl bg-amber-50 p-6 shadow-sm">
+              <summary className="cursor-pointer font-bold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700">
+                Do I need an account?
+              </summary>
+              <p className="mt-3 text-emerald-900/80">
+                Not to browse or use the map. Sign in to suggest a place.
+              </p>
+            </details>
+            <details className="rounded-2xl bg-amber-50 p-6 shadow-sm">
+              <summary className="cursor-pointer font-bold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700">
+                How do I suggest a place?
+              </summary>
+              <p className="mt-3 text-emerald-900/80">
+                Sign in, then use Suggest. Our team reviews every idea before it shows up.
+              </p>
+            </details>
+            <details className="rounded-2xl bg-amber-50 p-6 shadow-sm">
+              <summary className="cursor-pointer font-bold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700">
+                Who checks the suggestions?
+              </summary>
+              <p className="mt-3 text-emerald-900/80">Our team&apos;s staff reviewers.</p>
+            </details>
+            <details className="rounded-2xl bg-amber-50 p-6 shadow-sm">
+              <summary className="cursor-pointer font-bold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700">
+                Is this an official BYU-Idaho site?
+              </summary>
+              <p className="mt-3 text-emerald-900/80">No, it&apos;s a student class project.</p>
+            </details>
           </div>
         </section>
 

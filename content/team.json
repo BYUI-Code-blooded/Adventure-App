@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Andrew Trujillo",
+    "role": "Team Leader",
+    "bio": "I am a cybersecurity major with a minor in AI engineering at BYU-Idaho. I love to play video games, Magic: The Gathering, and I love coding!",
+    "favorite": "Miniature Manager Hobbies and Games",
+    "favoriteWhy": "I love to play Magic: The Gathering here, and I love the community-focused vibe!",
+    "location": "43.828416,-111.781472",
+    "photo": "/team/andrew.jpg"
+  },
+  {
+    "name": "Asher Smith",
+    "role": "Scrum Lead",
+    "bio": "I am a software engineering major with a focus on full stack web development at BYU-Idaho. I love learning new things and finding fun wherever I go and whatever I do!",
+    "favorite": "Sugarbeast",
+    "favoriteWhy": "They have really good, high-quality ice cream, karaoke nights, and a large upstairs game room with a bunch of classic board and card games!",
+    "location": "43.817959,-111.787076",
+    "photo": "/team/asher.png"
+  },
+  {
+    "name": "Dallas Walker",
+    "role": "Content Specialist",
+    "bio": "I am a student at BYU-Idaho studying data analytics and software development. I have a passion for using AI and technology to solve practical problems. I love building innovative projects, learning new tools, and creating technology that helps people.",
+    "favorite": "Pizza Pie Cafe",
+    "favoriteWhy": "They have really good pizza!",
+    "location": "43.831609,-111.777626",
+    "photo": "/team/dallas.jpg"
+  },
+  {
+    "name": "Vinicius Paredes Cabral",
+    "role": "Technical Lead",
+    "bio": "I'm half Spanish and half Brazilian, and I'm currently studying Computer Science at BYU-Idaho. I'm a huge fan of good meat and absolutely love cooking it. I also really enjoy hiking, spending time outdoors in nature, and chasing a good adrenaline rush.",
+    "favorite": "Grand Teton Gun & Range",
+    "favoriteWhy": "It's a lot of fun!",
+    "location": "43.844202,-111.777321",
+    "photo": "/team/vini.jpeg"
+  }
+]
