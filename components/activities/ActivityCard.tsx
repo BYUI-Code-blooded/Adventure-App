@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { newEventForActivityHref } from "@/lib/events";
 import { getFoodOpenStatus } from "@/lib/food-hours";
 import type { Activity } from "@/lib/types";
 
@@ -124,16 +126,24 @@ export default function ActivityCard({ activity, showPhoto }: { activity: Activi
           </address>
         )}
         {activity.category === "food" && <FoodDetails activity={activity} />}
-        {websiteUrl && (
-          <a
-            href={websiteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex min-h-11 items-center self-start rounded-full bg-emerald-900 px-5 py-2 font-bold text-amber-50 hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+        <div className="mt-5 flex flex-wrap gap-2">
+          {websiteUrl && (
+            <a
+              href={websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center rounded-full bg-emerald-900 px-5 py-2 font-bold text-amber-50 hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            >
+              Visit website
+            </a>
+          )}
+          <Link
+            href={newEventForActivityHref(activity.id)}
+            className="inline-flex min-h-11 items-center rounded-full border-2 border-emerald-900 px-5 py-2 font-semibold hover:bg-emerald-900 hover:text-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
           >
-            Visit website
-          </a>
-        )}
+            Create an event
+          </Link>
+        </div>
       </div>
     </article>
   );

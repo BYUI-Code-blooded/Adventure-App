@@ -38,3 +38,19 @@ export type Profile = {
   phone: string | null;
   role: Role;
 };
+
+// A row of public.events. Unlimited events have max_participants = null. An event has an address,
+// coordinates, or both. The organizer is creator_id (null if they deleted their account).
+export type Event = {
+  id: string;
+  activity_id: string | null;
+  creator_id: string | null;
+  name: string;
+  description: string;
+  address: string | null;
+  lat: number | null;
+  lon: number | null;
+  start_time: string;
+  end_time: string;
+  max_participants: number | null;
+};

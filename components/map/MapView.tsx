@@ -2,6 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import EventList from "@/components/events/EventList";
+import { useEvents } from "@/components/events/useEvents";
+import { newEventForActivityHref } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import type { Activity, ActivityCategory } from "@/lib/types";
 import { REXBURG_CENTER, distanceMiles, type LatLon } from "@/lib/distance";
@@ -34,6 +38,7 @@ export default function MapView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const { events, joinedIds, loading: eventsLoading, error: eventsError, reload: reloadEvents, signedIn, join, leave } = useEvents();
 
   useEffect(() => {
     let active = true;
@@ -96,6 +101,8 @@ export default function MapView() {
     });
   }, [activities, category, search, distance, origin]);
 
+  const showResults = !loading && !error && visibleActivities.length > 0;
+
   return (
     <div>
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
@@ -147,18 +154,31 @@ export default function MapView() {
           <p className="text-emerald-900/80">We couldn&apos;t load the activity map right now. Please try again.</p>
           <button type="button" onClick={() => setReloadKey((key) => key + 1)} className="mt-4 min-h-11 rounded-full bg-emerald-900 px-5 py-2 font-bold text-amber-50 hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">Try again</button>
         </div>
-      ) : visibleActivities.length === 0 ? (
+      ) : !showResults ? (
         <p className="mt-6 rounded-2xl bg-amber-50 p-6 text-emerald-900/80" role="status">No activities match those filters.</p>
       ) : (
         <>
           <p className="mt-4 text-sm font-semibold text-emerald-900/80">Showing {visibleActivities.length} of {activities.length} activities.</p>
-          <LeafletMap activities={visibleActivities} />
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <p className="mt-1 text-sm text-emerald-900/80">Gold dots are activities and green dots are events. Tap anywhere on the map to create an event there.</p>
+          <LeafletMap activities={visibleActivities} events={events} />
+        </>
+      )}
+
+      <h2 className="mt-8 text-2xl font-extrabold md:text-3xl">Upcoming events</h2>
+      <EventList events={events} joinedIds={joinedIds} loading={eventsLoading} error={eventsError} signedIn={signedIn} onRetry={reloadEvents} onJoin={join} onLeave={leave} />
+
+      {showResults && (
+        <>
+          <h2 className="mt-8 text-2xl font-extrabold md:text-3xl">Activities</h2>
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visibleActivities.map((activity) => (
               <li key={activity.id} className="rounded-2xl bg-amber-50 p-5 shadow-sm">
-                <h2 className="text-lg font-bold">{activity.name}</h2>
+                <h3 className="text-lg font-bold">{activity.name}</h3>
                 <p className="mt-1 text-sm font-semibold text-emerald-700">{activity.category}</p>
                 {activity.address && <p className="mt-2 text-sm text-emerald-900/80">{activity.address}</p>}
+                <Link href={newEventForActivityHref(activity.id)} className="mt-3 inline-flex min-h-11 items-center rounded-full border-2 border-emerald-900 px-5 py-2 font-semibold hover:bg-emerald-900 hover:text-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">
+                  Create an event
+                </Link>
               </li>
             ))}
           </ul>
