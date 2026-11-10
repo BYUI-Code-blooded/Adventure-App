@@ -4,8 +4,11 @@
 // Built from two overlapping native range inputs, so it works with keyboard and touch without extra packages.
 import { useId } from "react";
 
-export const DISTANCE_MAX = 10; // miles; the right end of the slider means "no upper limit"
-export const DISTANCE_STEP = 0.5;
+// Most activities are within 2 miles, so the slider moves in quarter miles up to 2 mi, then in whole miles.
+// The right end of the slider means "no upper limit".
+const STOPS = [...Array.from({ length: 9 }, (_, i) => i * 0.25), ...Array.from({ length: 13 }, (_, i) => i + 3)];
+const LAST = STOPS.length - 1;
+export const DISTANCE_MAX = STOPS[LAST]; // miles
 
 type Props = {
   min: number;
@@ -20,7 +23,12 @@ const thumb =
 const inputClass = `pointer-events-none absolute inset-0 h-6 w-full appearance-none bg-transparent focus-visible:outline-none [&:focus-visible::-webkit-slider-thumb]:outline-2 [&:focus-visible::-webkit-slider-thumb]:outline-offset-2 [&:focus-visible::-webkit-slider-thumb]:outline-emerald-700 ${thumb}`;
 
 export function formatMiles(value: number) {
-  return `${Number.isInteger(value) ? value : value.toFixed(1)} mi`;
+  return `${Number.isInteger(value) ? value : value.toFixed(2).replace(/0$/, "")} mi`;
+}
+
+function indexOfMiles(value: number) {
+  const index = STOPS.indexOf(value);
+  return index === -1 ? LAST : index;
 }
 
 export function formatRange(min: number, max: number) {
@@ -29,7 +37,9 @@ export function formatRange(min: number, max: number) {
 
 export default function DistanceSlider({ min, max, onChange }: Props) {
   const id = useId();
-  const percent = (value: number) => (value / DISTANCE_MAX) * 100;
+  const minIndex = indexOfMiles(min);
+  const maxIndex = indexOfMiles(max);
+  const percent = (index: number) => (index / LAST) * 100;
 
   return (
     <div>
@@ -41,27 +51,27 @@ export default function DistanceSlider({ min, max, onChange }: Props) {
         <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-emerald-900/20" />
         <div
           className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full bg-emerald-900"
-          style={{ left: `${percent(min)}%`, right: `${100 - percent(max)}%` }}
+          style={{ left: `${percent(minIndex)}%`, right: `${100 - percent(maxIndex)}%` }}
         />
         <input
           id={`${id}-min`}
           type="range"
           aria-label="Minimum distance in miles"
           min={0}
-          max={DISTANCE_MAX}
-          step={DISTANCE_STEP}
-          value={min}
-          onChange={(event) => onChange({ min: Math.min(Number(event.target.value), max - DISTANCE_STEP), max })}
-          className={`${inputClass} ${min > DISTANCE_MAX / 2 ? "z-10" : ""}`}
+          max={LAST}
+          step={1}
+          value={minIndex}
+          onChange={(event) => onChange({ min: STOPS[Math.min(Number(event.target.value), maxIndex - 1)], max })}
+          className={`${inputClass} ${minIndex > LAST / 2 ? "z-10" : ""}`}
         />
         <input
           type="range"
           aria-label="Maximum distance in miles"
           min={0}
-          max={DISTANCE_MAX}
-          step={DISTANCE_STEP}
-          value={max}
-          onChange={(event) => onChange({ min, max: Math.max(Number(event.target.value), min + DISTANCE_STEP) })}
+          max={LAST}
+          step={1}
+          value={maxIndex}
+          onChange={(event) => onChange({ min, max: STOPS[Math.max(Number(event.target.value), minIndex + 1)] })}
           className={inputClass}
         />
       </div>
