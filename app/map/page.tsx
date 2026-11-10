@@ -15,7 +15,7 @@ export default function MapPage() {
             <p className="text-sm font-semibold uppercase tracking-widest text-amber-300">Rexburg, Idaho</p>
             <h1 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight md:text-6xl">Find something nearby</h1>
             <p className="mt-4 max-w-xl text-lg text-emerald-100">
-              Explore the activities in our guide on one map. Search by name or narrow the map by category.
+              Explore the activities in our guide on one map, join an event, or tap the map to create your own.
             </p>
           </div>
         </section>

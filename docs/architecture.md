@@ -26,7 +26,7 @@ Pages read JSON from `content/*.json` at build time (for example `content/outdoo
 
 ## 4. App page flow
 1. Load events (public read).
-2. Click the map to create an event (lazy anonymous sign-in on the first write).
+2. Click the map and follow the pin's link, or use "Create an event" on any activity, to reach the form at `/events/new`. Creating an event requires a signed-in account.
 3. Join an event (insert into `event_attendees`).
 4. Attendee count = number of rows in `event_attendees` for that event.
 5. Filter events by day.
@@ -35,7 +35,7 @@ Pages read JSON from `content/*.json` at build time (for example `content/outdoo
 The source of truth is `supabase/schema.sql`.
 - `profiles`: one private row per auth user (`name`, `phone`, `role`: `user`, `developer` or `admin`). The email lives in `auth.users`. Other users only see `id` and `name` through the `public_profiles` view.
 - `activities`: places or things to do (`name`, `description`, `address`, `lat`, `lng`, `photo_url`, `category`, `is_featured`, `created_by`). Only staff (admin or developer) can set `is_featured`.
-- `events`: an activity scheduled at a time (`activity_id`, `creator_id`, `start_time`, `end_time`, `max_participants`).
+- `events`: something happening at a time (`name`, `description`, `creator_id`, `start_time`, `end_time`, `address` and/or `lat` + `lon`). `activity_id` is optional and `max_participants` null means unlimited. The organizer is `creator_id`: their name comes from `public_profiles`, and their email and phone from the `event_organizer_contacts(event_ids)` function, which only answers signed-in members and only for events that haven't ended.
 - `event_attendees`: who joined which event (composite primary key `event_id` + `user_id`). The count is the number of rows; joins are rejected once the event is full.
 
 Use `start_time timestamptz`; group by day in `America/Denver`.
