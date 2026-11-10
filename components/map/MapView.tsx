@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Activity, ActivityCategory } from "@/lib/types";
+import { REXBURG_CENTER, distanceMiles, type LatLon } from "@/lib/distance";
+import DistanceSlider, { DISTANCE_MAX } from "@/components/map/DistanceSlider";
 
 const LeafletMap = dynamic(() => import("@/components/map/LeafletMap"), {
   ssr: false,
@@ -26,6 +28,9 @@ export default function MapView() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [category, setCategory] = useState<ActivityCategory | "all">("all");
   const [search, setSearch] = useState("");
+  const [distance, setDistance] = useState({ min: 0, max: DISTANCE_MAX });
+  const [origin, setOrigin] = useState<LatLon | null>(null); // null = Rexburg center
+  const [locationMessage, setLocationMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -63,14 +68,33 @@ export default function MapView() {
     };
   }, [reloadKey]);
 
+  function shareLocation() {
+    if (!navigator.geolocation) {
+      setLocationMessage("Your browser can't share your location.");
+      return;
+    }
+    setLocationMessage("Finding you…");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setOrigin({ lat: position.coords.latitude, lon: position.coords.longitude });
+        setLocationMessage("");
+      },
+      () => setLocationMessage("We couldn't get your location. Distances stay measured from Rexburg."),
+      { timeout: 10000 },
+    );
+  }
+
   const visibleActivities = useMemo(() => {
+    const from = origin ?? REXBURG_CENTER;
     const normalizedSearch = search.trim().toLocaleLowerCase();
     return activities.filter((activity) => {
       const matchesCategory = category === "all" || activity.category === category;
       const searchableText = `${activity.name} ${activity.description ?? ""} ${activity.address ?? ""}`.toLocaleLowerCase();
-      return matchesCategory && (!normalizedSearch || searchableText.includes(normalizedSearch));
+      const miles = distanceMiles(from, activity);
+      const withinDistance = miles >= distance.min && (distance.max >= DISTANCE_MAX || miles <= distance.max);
+      return matchesCategory && withinDistance && (!normalizedSearch || searchableText.includes(normalizedSearch));
     });
-  }, [activities, category, search]);
+  }, [activities, category, search, distance, origin]);
 
   return (
     <div>
@@ -101,6 +125,19 @@ export default function MapView() {
             {categories.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         </div>
+      </div>
+
+      <div className="mt-4 max-w-md">
+        <DistanceSlider min={distance.min} max={distance.max} onChange={setDistance} />
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-emerald-900/80">
+          <span>Measured from {origin ? "your location" : "central Rexburg"}.</span>
+          {origin ? (
+            <button type="button" onClick={() => setOrigin(null)} className="font-bold text-emerald-700 underline">Use Rexburg instead</button>
+          ) : (
+            <button type="button" onClick={shareLocation} className="font-bold text-emerald-700 underline">Use my location</button>
+          )}
+        </div>
+        {locationMessage && <p className="mt-1 text-sm text-emerald-900/80" role="status">{locationMessage}</p>}
       </div>
 
       {loading ? (
