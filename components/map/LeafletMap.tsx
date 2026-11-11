@@ -3,7 +3,6 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { latLng } from "leaflet";
 import { Circle, CircleMarker, MapContainer, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type { EventWithCount } from "@/components/events/useEvents";
 import { formatEventTime, formatSpots, newEventAtPointHref, newEventForActivityHref } from "@/lib/events";
@@ -26,22 +25,18 @@ const popupLinkClass = "mt-3 inline-block rounded-full bg-emerald-900 px-4 py-2 
 
 const METERS_PER_MILE = 1609.344;
 
-// Shows the distance range from the slider as a circle that grows and shrinks with it.
+// Shows the distance range from the slider as a circle that grows and shrinks with it (the map zoom is left alone).
 // The outer circle is the maximum distance; when a minimum is set, an inner cream circle makes a ring.
 // maxMiles is null when the slider is at its open-ended end, so no outer circle is drawn then.
 function DistanceCircle({ center, minMiles, maxMiles }: { center: [number, number]; minMiles: number; maxMiles: number | null }) {
   const map = useMap();
   const [lat, lon] = center;
 
-  // Keep the whole circle in view when it grows, shrinks or the starting point moves.
+  // Only the starting point moves the map (pan, never zoom). The slider just redraws the circle,
+  // so the zoom level the visitor chose stays put.
   useEffect(() => {
-    if (maxMiles === null) {
-      map.setView([lat, lon], 13);
-    } else {
-      // Computed from the radius itself, not from the drawn circle, which can still hold the old size mid-animation.
-      map.fitBounds(latLng(lat, lon).toBounds(maxMiles * METERS_PER_MILE * 2), { padding: [16, 16] });
-    }
-  }, [map, lat, lon, maxMiles]);
+    map.panTo([lat, lon]);
+  }, [map, lat, lon]);
 
   return (
     <>
