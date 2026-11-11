@@ -74,6 +74,29 @@ function FoodDetails({ activity }: { activity: Activity }) {
   );
 }
 
+// Splits a description into lines. Lines that start with a label such as "When:" or "Location:"
+// get a bold label. Text is rendered as plain text only (never as HTML).
+const DESCRIPTION_LABEL = /^(When|Location|Capacity|Where|Cost|Address):\s*(.*)$/;
+
+function DescriptionLines({ text }: { text: string }) {
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  return (
+    <div className="mt-2 flex-1 space-y-2 text-emerald-900/80">
+      {lines.map((line, index) => {
+        const match = line.match(DESCRIPTION_LABEL);
+        return match ? (
+          <p key={index}>
+            <span className="font-bold text-emerald-700">{match[1]}: </span>
+            {match[2]}
+          </p>
+        ) : (
+          <p key={index}>{line}</p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ActivityCard({ activity, showPhoto }: { activity: Activity; showPhoto: boolean }) {
   const [imageFailed, setImageFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
@@ -116,9 +139,7 @@ export default function ActivityCard({ activity, showPhoto }: { activity: Activi
             </span>
           )}
         </div>
-        <p className="mt-2 flex-1 text-emerald-900/80">
-          {activity.description || "More details coming soon."}
-        </p>
+        <DescriptionLines text={activity.description || "More details coming soon."} />
         {activity.address && (
           <address className="mt-4 not-italic text-sm text-emerald-900/80">
             <span className="font-bold text-emerald-700">Address: </span>
