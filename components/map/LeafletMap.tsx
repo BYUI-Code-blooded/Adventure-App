@@ -1,9 +1,10 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CircleMarker, MapContainer, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import { latLng } from "leaflet";
+import { Circle, CircleMarker, MapContainer, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type { EventWithCount } from "@/components/events/useEvents";
 import { formatEventTime, formatSpots, newEventAtPointHref, newEventForActivityHref } from "@/lib/events";
 import type { Activity } from "@/lib/types";
@@ -22,6 +23,38 @@ function safeWebsiteUrl(value?: string | null) {
 
 // Leaflet's own styles color popup links, so the text color here needs ! to win.
 const popupLinkClass = "mt-3 inline-block rounded-full bg-emerald-900 px-4 py-2 font-bold text-amber-50! hover:bg-emerald-800";
+
+const METERS_PER_MILE = 1609.344;
+
+// Shows the distance range from the slider as a circle that grows and shrinks with it.
+// The outer circle is the maximum distance; when a minimum is set, an inner cream circle makes a ring.
+// maxMiles is null when the slider is at its open-ended end, so no outer circle is drawn then.
+function DistanceCircle({ center, minMiles, maxMiles }: { center: [number, number]; minMiles: number; maxMiles: number | null }) {
+  const map = useMap();
+  const [lat, lon] = center;
+
+  // Keep the whole circle in view when it grows, shrinks or the starting point moves.
+  useEffect(() => {
+    if (maxMiles === null) {
+      map.setView([lat, lon], 13);
+    } else {
+      // Computed from the radius itself, not from the drawn circle, which can still hold the old size mid-animation.
+      map.fitBounds(latLng(lat, lon).toBounds(maxMiles * METERS_PER_MILE * 2), { padding: [16, 16] });
+    }
+  }, [map, lat, lon, maxMiles]);
+
+  return (
+    <>
+      {maxMiles !== null && (
+        <Circle center={center} radius={maxMiles * METERS_PER_MILE} interactive={false} pathOptions={{ color: "#047857", weight: 2, dashArray: "6 6", fillColor: "#047857", fillOpacity: 0.12 }} />
+      )}
+      {minMiles > 0 && (
+        <Circle center={center} radius={minMiles * METERS_PER_MILE} interactive={false} pathOptions={{ color: "#047857", weight: 2, dashArray: "6 6", fillColor: "#fffbeb", fillOpacity: 0.6 }} />
+      )}
+      <CircleMarker center={center} radius={5} interactive={false} pathOptions={{ color: "#fffbeb", weight: 2, fillColor: "#047857", fillOpacity: 1 }} />
+    </>
+  );
+}
 
 // Tapping the map drops a pin with a link to the event form. Going straight to the form would
 // fire on every stray tap, including the one that closes a popup.
@@ -47,7 +80,15 @@ function DropPin() {
   );
 }
 
-export default function LeafletMap({ activities, events }: { activities: Activity[]; events: EventWithCount[] }) {
+type Props = {
+  activities: Activity[];
+  events: EventWithCount[];
+  center?: [number, number]; // where distances are measured from; defaults to central Rexburg
+  minMiles?: number;
+  maxMiles?: number | null; // null = no upper limit
+};
+
+export default function LeafletMap({ activities, events, center = rexburgCenter, minMiles = 0, maxMiles = null }: Props) {
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border-2 border-emerald-900 bg-emerald-900">
       <MapContainer center={rexburgCenter} zoom={13} scrollWheelZoom className="h-[65svh] min-h-112 w-full">
@@ -55,6 +96,7 @@ export default function LeafletMap({ activities, events }: { activities: Activit
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <DistanceCircle center={center} minMiles={minMiles} maxMiles={maxMiles} />
         {activities.map((activity) => {
           const websiteUrl = safeWebsiteUrl(activity.website_url);
           return (
