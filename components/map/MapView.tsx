@@ -160,7 +160,13 @@ export default function MapView() {
         <>
           <p className="mt-4 text-sm font-semibold text-emerald-900/80">Showing {visibleActivities.length} of {activities.length} activities.</p>
           <p className="mt-1 text-sm text-emerald-900/80">Gold dots are activities and green dots are events. Tap anywhere on the map to create an event there.</p>
-          <LeafletMap activities={visibleActivities} events={events} />
+          <LeafletMap
+            activities={visibleActivities}
+            events={events}
+            center={origin ? [origin.lat, origin.lon] : [REXBURG_CENTER.lat, REXBURG_CENTER.lon]}
+            minMiles={distance.min}
+            maxMiles={distance.max >= DISTANCE_MAX ? null : distance.max}
+          />
         </>
       )}
 
