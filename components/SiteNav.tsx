@@ -2,7 +2,7 @@
 
 // Site-wide navigation, rendered once in app/layout.tsx.
 // Mobile: top bar with the logo + fixed bottom tab bar. Desktop (md+): links move into the top bar.
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { exploreLinks, ExploreIcon, IdeaIcon, UsersIcon, navLinks } from "@/components/icons";
@@ -119,6 +119,25 @@ export default function SiteNav() {
   ];
   const mobileLinks = links.filter(({ href }) => href !== "/admin");
 
+  // Explore sits in the middle of the phone tab bar (after Home and Map).
+  const mobileExploreTab = (
+    <li className="relative" ref={mobileExploreRef}>
+      <button
+        type="button"
+        aria-expanded={exploreOpen}
+        aria-haspopup="true"
+        aria-controls="mobile-explore-menu"
+        aria-current={exploreActive ? "page" : undefined}
+        onClick={() => setExploreState((state) => ({ ...state, open: !state.open }))}
+        className="flex w-full appearance-none flex-col items-center gap-1 bg-transparent py-2.5 text-[11px] font-medium hover:text-amber-50 focus-visible:ring-2 focus-visible:ring-amber-300 aria-[current=page]:text-amber-300"
+      >
+        <ExploreIcon className="size-6" />
+        Explore
+      </button>
+      {exploreOpen && <div className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2">{exploreMenu("mobile-explore-menu")}</div>}
+    </li>
+  );
+
   return (
     <>
       {/* z-[1100] keeps the header and bottom bar above Leaflet's map panes and controls (z-index up to 1000) on /map. */}
@@ -173,8 +192,10 @@ export default function SiteNav() {
         className="fixed inset-x-0 bottom-0 z-[1100] border-t border-emerald-800 bg-emerald-900 pb-[env(safe-area-inset-bottom)] text-emerald-200 md:hidden"
       >
         <ul className={`grid ${mobileLinks.length + 1 === 5 ? "grid-cols-5" : "grid-cols-4"}`}>
-                {mobileLinks.map(({ href, label, Icon }) => (
-            <li key={href}>
+          {mobileLinks.map(({ href, label, Icon }, index) => (
+            <Fragment key={href}>
+              {index === 2 && mobileExploreTab}
+            <li>
               <Link
                 href={href}
                 aria-current={isActive(pathname, href) ? "page" : undefined}
@@ -184,22 +205,8 @@ export default function SiteNav() {
                 {label}
               </Link>
             </li>
+            </Fragment>
           ))}
-          <li className="relative" ref={mobileExploreRef}>
-            <button
-              type="button"
-              aria-expanded={exploreOpen}
-              aria-haspopup="true"
-              aria-controls="mobile-explore-menu"
-              aria-current={exploreActive ? "page" : undefined}
-              onClick={() => setExploreState((state) => ({ ...state, open: !state.open }))}
-              className="flex w-full appearance-none flex-col items-center gap-1 bg-transparent py-2.5 text-[11px] font-medium hover:text-amber-50 focus-visible:ring-2 focus-visible:ring-amber-300 aria-[current=page]:text-amber-300"
-            >
-              <ExploreIcon className="size-6" />
-              Explore
-            </button>
-            {exploreOpen && <div className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2">{exploreMenu("mobile-explore-menu")}</div>}
-          </li>
         </ul>
       </nav>
     </>
