@@ -41,12 +41,13 @@ function JoinButton({ event, joined, onJoin, onLeave }: {
   );
 }
 
-export default function EventList({ events, joinedIds, loading, error, signedIn, onRetry, onJoin, onLeave }: {
+export default function EventList({ events, joinedIds, loading, error, signedIn, userId, onRetry, onJoin, onLeave }: {
   events: EventWithCount[];
   joinedIds: string[];
   loading: boolean;
   error: boolean;
   signedIn: boolean;
+  userId?: string;
   onRetry: () => void;
   onJoin: (id: string) => JoinResult;
   onLeave: (id: string) => JoinResult;
@@ -90,6 +91,11 @@ export default function EventList({ events, joinedIds, loading, error, signedIn,
             )}
             {event.organizer_phone && <p>{event.organizer_phone}</p>}
           </div>
+          {userId === event.creator_id && (
+            <Link href={`/events/edit?id=${encodeURIComponent(event.id)}`} className={`mt-5 ${secondaryClass} sm:w-auto`}>
+              Edit event
+            </Link>
+          )}
           {signedIn ? (
             <JoinButton event={event} joined={joinedIds.includes(event.id)} onJoin={onJoin} onLeave={onLeave} />
           ) : (

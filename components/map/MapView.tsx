@@ -38,7 +38,7 @@ export default function MapView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-  const { events, joinedIds, loading: eventsLoading, error: eventsError, reload: reloadEvents, signedIn, join, leave } = useEvents();
+  const { events, joinedIds, loading: eventsLoading, error: eventsError, reload: reloadEvents, signedIn, userId, join, leave } = useEvents();
 
   useEffect(() => {
     let active = true;
@@ -171,7 +171,7 @@ export default function MapView() {
       )}
 
       <h2 className="mt-8 text-2xl font-extrabold md:text-3xl">Upcoming events</h2>
-      <EventList events={events} joinedIds={joinedIds} loading={eventsLoading} error={eventsError} signedIn={signedIn} onRetry={reloadEvents} onJoin={join} onLeave={leave} />
+      <EventList events={events} joinedIds={joinedIds} loading={eventsLoading} error={eventsError} signedIn={signedIn} userId={userId} onRetry={reloadEvents} onJoin={join} onLeave={leave} />
 
       {showResults && (
         <>

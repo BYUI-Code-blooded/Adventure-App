@@ -13,6 +13,7 @@ import {
   EVENT_DESCRIPTION_MAX,
   EVENT_NAME_MAX,
   EVENT_SPOTS_MAX,
+  isoToRexburgTime,
   parsePoint,
   rexburgTimeToIso,
   validateEventDescription,
@@ -24,7 +25,7 @@ import {
 } from "@/lib/events";
 import { ADDRESS_MAX, MAX_DISTANCE_KM } from "@/lib/suggestions";
 import { supabase } from "@/lib/supabase";
-import type { Activity, Profile } from "@/lib/types";
+import type { Activity, Event, Profile } from "@/lib/types";
 
 const LocationPicker = dynamic(() => import("@/components/suggestions/LocationPicker"), {
   ssr: false,
@@ -36,6 +37,7 @@ const LocationPicker = dynamic(() => import("@/components/suggestions/LocationPi
 });
 
 type LinkedActivity = Pick<Activity, "id" | "name" | "address" | "lat" | "lon">;
+type EditableEvent = Pick<Event, "id" | "activity_id" | "name" | "description" | "address" | "lat" | "lon" | "start_time" | "end_time" | "max_participants" | "creator_id">;
 type Errors = Partial<Record<"name" | "description" | "start" | "end" | "location" | "spots", string>>;
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -71,11 +73,13 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
 export default function EventForm() {
   const params = useSearchParams();
   const activityId = params.get("activity");
+  const editId = params.get("id");
   const { session, checking, profile } = useAuthProfile();
   const signedIn = Boolean(session) && !session?.user.is_anonymous;
 
   // undefined while loading, null if there is no such activity
   const [activity, setActivity] = useState<LinkedActivity | null | undefined>(activityId ? undefined : null);
+  const [eventToEdit, setEventToEdit] = useState<EditableEvent | null | undefined>(editId ? undefined : null);
 
   useEffect(() => {
     if (!activityId) return;
@@ -94,7 +98,23 @@ export default function EventForm() {
     };
   }, [activityId]);
 
-  if (checking || (signedIn && profile === undefined) || activity === undefined) {
+  useEffect(() => {
+    if (!editId) return;
+    let active = true;
+    supabase
+      .from("events")
+      .select("id, activity_id, name, description, address, lat, lon, start_time, end_time, max_participants, creator_id")
+      .eq("id", editId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setEventToEdit(data as EditableEvent | null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [editId]);
+
+  if (checking || (signedIn && profile === undefined) || activity === undefined || eventToEdit === undefined) {
     return (
       <Shell>
         <p className="mx-auto max-w-6xl px-4 py-12 text-emerald-900/80">Loading…</p>
@@ -110,6 +130,17 @@ export default function EventForm() {
           <Link href="/login" className={`mt-6 inline-block ${primaryClass} sm:w-auto`}>
             Sign in
           </Link>
+        </Notice>
+      </Shell>
+    );
+  }
+
+  if (editId && (!eventToEdit || eventToEdit.creator_id !== session.user.id)) {
+    return (
+      <Shell>
+        <Notice title="You can’t edit this event">
+          <p className="mt-2 text-emerald-900/80">Only the person who organized an event can edit it.</p>
+          <Link href="/map" className={`mt-6 inline-block ${primaryClass} sm:w-auto`}>Back to the map</Link>
         </Notice>
       </Shell>
     );
@@ -134,26 +165,31 @@ export default function EventForm() {
         pin={parsePoint(params.get("lat"), params.get("lon"))}
         session={session}
         profile={profile}
+        eventToEdit={eventToEdit}
       />
     </Shell>
   );
 }
 
-function EventFields({ activity, activityMissing, pin, session, profile }: {
+function EventFields({ activity, activityMissing, pin, session, profile, eventToEdit }: {
   activity: LinkedActivity | null;
   activityMissing: boolean;
   pin: Point | null;
   session: Session;
   profile: Profile;
+  eventToEdit: EditableEvent | null;
 }) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [location, setLocation] = useState<Point | null>(activity ? { lat: activity.lat, lon: activity.lon } : pin);
-  const [address, setAddress] = useState(activity?.address ?? "");
-  const [spots, setSpots] = useState("");
-  const [unlimited, setUnlimited] = useState(false);
+  const editing = Boolean(eventToEdit);
+  const [name, setName] = useState(eventToEdit?.name ?? "");
+  const [description, setDescription] = useState(eventToEdit?.description ?? "");
+  const [start, setStart] = useState(eventToEdit ? isoToRexburgTime(eventToEdit.start_time) : "");
+  const [end, setEnd] = useState(eventToEdit ? isoToRexburgTime(eventToEdit.end_time) : "");
+  const [location, setLocation] = useState<Point | null>(eventToEdit && eventToEdit.lat !== null && eventToEdit.lon !== null
+    ? { lat: eventToEdit.lat, lon: eventToEdit.lon }
+    : activity ? { lat: activity.lat, lon: activity.lon } : pin);
+  const [address, setAddress] = useState(eventToEdit?.address ?? activity?.address ?? "");
+  const [spots, setSpots] = useState(eventToEdit?.max_participants?.toString() ?? "");
+  const [unlimited, setUnlimited] = useState(eventToEdit?.max_participants === null);
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState("");
   const [sending, setSending] = useState(false);
@@ -177,9 +213,7 @@ function EventFields({ activity, activityMissing, pin, session, profile }: {
 
     setSending(true);
     setSubmitError("");
-    // The organizer is creator_id, which the database sets to the signed-in user.
-    const { error } = await supabase.from("events").insert({
-      activity_id: activity?.id ?? null,
+    const values = {
       name: name.trim(),
       description: description.trim(),
       address: address.trim() || null,
@@ -188,10 +222,14 @@ function EventFields({ activity, activityMissing, pin, session, profile }: {
       start_time: startIso,
       end_time: endIso,
       max_participants: unlimited ? null : Number(spots),
-    });
+    };
+    const result = editing
+      ? await supabase.from("events").update(values).eq("id", eventToEdit!.id)
+      : await supabase.from("events").insert({ ...values, activity_id: activity?.id ?? null });
+    const { error } = result;
     setSending(false);
     if (error) {
-      setSubmitError("We couldn't create your event. Please try again.");
+      setSubmitError(`We couldn't ${editing ? "save your changes" : "create your event"}. Please try again.`);
       return;
     }
     setCreated(true);
@@ -199,8 +237,8 @@ function EventFields({ activity, activityMissing, pin, session, profile }: {
 
   if (created) {
     return (
-      <Notice title="Your event is live!">
-        <p className="mt-2 text-emerald-900/80">People can now find it on the map and join you.</p>
+      <Notice title={editing ? "Your event was updated!" : "Your event is live!"}>
+        <p className="mt-2 text-emerald-900/80">{editing ? "Your changes are now visible on the map." : "People can now find it on the map and join you."}</p>
         <Link href="/map" className={`mt-6 inline-block ${primaryClass} sm:w-auto`}>See it on the map</Link>
       </Notice>
     );
@@ -209,7 +247,7 @@ function EventFields({ activity, activityMissing, pin, session, profile }: {
   return (
     <section className="mx-auto max-w-2xl px-4 py-12 md:py-16">
       <form onSubmit={submit} noValidate>
-        <h2 className="text-2xl font-extrabold md:text-3xl">Tell people about it</h2>
+        <h2 className="text-2xl font-extrabold md:text-3xl">{editing ? "Update your event" : "Tell people about it"}</h2>
         {activity && <p className="mt-2 font-semibold text-emerald-700">At {activity.name}</p>}
         {activityMissing && (
           <p role="status" className={errorClass}>We couldn&apos;t find that activity, but you can still create your event here.</p>
@@ -293,7 +331,7 @@ function EventFields({ activity, activityMissing, pin, session, profile }: {
         {submitError && <p role="alert" className={errorClass}>{submitError}</p>}
 
         <button type="submit" className={`mt-6 ${primaryClass} sm:w-auto`} disabled={sending}>
-          {sending ? "Creating…" : "Create event"}
+          {sending ? (editing ? "Saving…" : "Creating…") : (editing ? "Save changes" : "Create event")}
         </button>
       </form>
     </section>
