@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Circle, CircleMarker, MapContainer, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { Circle, CircleMarker, MapContainer, Pane, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type { EventWithCount } from "@/components/events/useEvents";
 import { formatEventTime, formatSpots, newEventAtPointHref, newEventForActivityHref } from "@/lib/events";
 import type { Activity } from "@/lib/types";
@@ -81,21 +81,41 @@ type Props = {
   center?: [number, number]; // where distances are measured from; defaults to central Rexburg
   minMiles?: number;
   maxMiles?: number | null; // null = no upper limit
+  highlightedActivityIds?: string[]; // activities to draw larger (hovered or opened in the side list)
 };
 
-export default function LeafletMap({ activities, events, center = rexburgCenter, minMiles = 0, maxMiles = null }: Props) {
+export default function LeafletMap({ activities, events, center = rexburgCenter, minMiles = 0, maxMiles = null, highlightedActivityIds = [] }: Props) {
   return (
-    <div className="mt-4 overflow-hidden rounded-2xl border-2 border-emerald-900 bg-emerald-900">
+    <div className="overflow-hidden rounded-2xl border-2 border-emerald-900 bg-emerald-900">
       <MapContainer center={rexburgCenter} zoom={13} scrollWheelZoom className="h-[65svh] min-h-112 w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <DistanceCircle center={center} minMiles={minMiles} maxMiles={maxMiles} />
+        {/* Highlight: a soft green halo behind the dot. The dot itself keeps its size. */}
+        {/* Its own pane sits under the overlay pane (400), so the halo never covers the dot. */}
+        <Pane name="activity-halo" style={{ zIndex: 395 }}>
+          {activities.filter((activity) => highlightedActivityIds.includes(activity.id)).map((activity) => (
+            <CircleMarker
+              key={`halo-${activity.id}`}
+              center={[activity.lat, activity.lon]}
+              interactive={false}
+              pathOptions={{ color: "#047857", weight: 3, fillColor: "#34d399", fillOpacity: 0.45 }}
+              radius={20}
+            />
+          ))}
+        </Pane>
         {activities.map((activity) => {
           const websiteUrl = safeWebsiteUrl(activity.website_url);
           return (
-            <CircleMarker key={activity.id} center={[activity.lat, activity.lon]} bubblingMouseEvents={false} pathOptions={{ color: "#064e3b", fillColor: "#fcd34d", fillOpacity: 0.95 }} radius={9}>
+            <CircleMarker
+              key={activity.id}
+              center={[activity.lat, activity.lon]}
+              bubblingMouseEvents={false}
+              pathOptions={{ color: "#064e3b", fillColor: "#fcd34d", fillOpacity: 0.95 }}
+              radius={9}
+            >
               <Popup>
                 <div className="min-w-44 text-emerald-950">
                   <h2 className="font-bold">{activity.name}</h2>
