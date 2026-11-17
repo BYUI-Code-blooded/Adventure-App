@@ -4,6 +4,24 @@ export type Role = "user" | "developer" | "admin";
 
 export type ActivityCategory = "indoor" | "outdoor" | "food" | "weekend";
 
+export type RecurrenceFrequency = "none" | "weekly" | "monthly";
+
+export type AdventureEvent = {
+  id: string;
+  activity_id: string;
+  creator_id?: string | null;
+  start_time: string;
+  end_time: string;
+  max_participants: number;
+  recurrence_rule?: string | null;
+  recurrence_end_date?: string | null;
+  created_at: string;
+  activity?: Pick<Activity, "name" | "address" | "lat" | "lon">;
+  attendee_count?: number;
+};
+
+export type EventReportReason = "inappropriate" | "spam" | "unsafe" | "other";
+
 // Review state of an activity: users suggest ideas as "pending"; staff approve or reject them.
 export type ActivityStatus = "pending" | "approved" | "rejected";
 

@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Activity, ActivityCategory } from "@/lib/types";
+import EventBoard from "@/components/events/EventBoard";
 
 const LeafletMap = dynamic(() => import("@/components/map/LeafletMap"), {
   ssr: false,
@@ -127,6 +128,7 @@ export default function MapView() {
           </ul>
         </>
       )}
+      <EventBoard activities={activities} />
     </div>
   );
 }
