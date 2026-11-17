@@ -25,7 +25,7 @@ import {
 } from "@/lib/events";
 import { ADDRESS_MAX, MAX_DISTANCE_KM } from "@/lib/suggestions";
 import { supabase } from "@/lib/supabase";
-import type { Activity, Event, Profile } from "@/lib/types";
+import type { Activity, Event, Profile, RecurrenceFrequency } from "@/lib/types";
 
 const LocationPicker = dynamic(() => import("@/components/suggestions/LocationPicker"), {
   ssr: false,
@@ -37,7 +37,7 @@ const LocationPicker = dynamic(() => import("@/components/suggestions/LocationPi
 });
 
 type LinkedActivity = Pick<Activity, "id" | "name" | "address" | "lat" | "lon">;
-type EditableEvent = Pick<Event, "id" | "activity_id" | "name" | "description" | "address" | "lat" | "lon" | "start_time" | "end_time" | "max_participants" | "creator_id">;
+type EditableEvent = Pick<Event, "id" | "activity_id" | "name" | "description" | "address" | "lat" | "lon" | "start_time" | "end_time" | "max_participants" | "creator_id" | "recurrence_rule" | "recurrence_end_date">;
 type Errors = Partial<Record<"name" | "description" | "start" | "end" | "location" | "spots", string>>;
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -103,7 +103,7 @@ export default function EventForm() {
     let active = true;
     supabase
       .from("events")
-      .select("id, activity_id, name, description, address, lat, lon, start_time, end_time, max_participants, creator_id")
+      .select("id, activity_id, name, description, address, lat, lon, start_time, end_time, max_participants, creator_id, recurrence_rule, recurrence_end_date")
       .eq("id", editId)
       .maybeSingle()
       .then(({ data }) => {
@@ -190,6 +190,8 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
   const [address, setAddress] = useState(eventToEdit?.address ?? activity?.address ?? "");
   const [spots, setSpots] = useState(eventToEdit?.max_participants?.toString() ?? "");
   const [unlimited, setUnlimited] = useState(eventToEdit?.max_participants === null);
+  const [frequency, setFrequency] = useState<RecurrenceFrequency>(eventToEdit?.recurrence_rule === "FREQ=WEEKLY" ? "weekly" : eventToEdit?.recurrence_rule === "FREQ=MONTHLY" ? "monthly" : "none");
+  const [recurrenceEnd, setRecurrenceEnd] = useState(eventToEdit?.recurrence_end_date ?? "");
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState("");
   const [sending, setSending] = useState(false);
@@ -222,6 +224,8 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
       start_time: startIso,
       end_time: endIso,
       max_participants: unlimited ? null : Number(spots),
+      recurrence_rule: frequency === "none" ? null : `FREQ=${frequency.toUpperCase()}`,
+      recurrence_end_date: frequency === "none" ? null : recurrenceEnd,
     };
     const result = editing
       ? await supabase.from("events").update(values).eq("id", eventToEdit!.id)
@@ -277,6 +281,16 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
               aria-invalid={Boolean(errors.end)} className={`mt-2 ${inputClass}`} />
             {errors.end && <p role="alert" className={errorClass}>{errors.end}</p>}
           </div>
+        </div>
+
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="e-repeat" className="block text-sm font-bold">Repeats</label>
+            <select id="e-repeat" value={frequency} onChange={(e) => setFrequency(e.target.value as RecurrenceFrequency)} className={`mt-2 ${inputClass}`}>
+              <option value="none">Does not repeat</option><option value="weekly">Every week</option><option value="monthly">Every month</option>
+            </select>
+          </div>
+          {frequency !== "none" && <div><label htmlFor="e-repeat-until" className="block text-sm font-bold">Repeat until</label><input id="e-repeat-until" required type="date" value={recurrenceEnd} onChange={(e) => setRecurrenceEnd(e.target.value)} className={`mt-2 ${inputClass}`} /></div>}
         </div>
 
         <p className="mt-5 text-sm font-bold">Where is it?</p>

@@ -6,8 +6,58 @@ import Link from "next/link";
 import { errorClass, primaryClass, secondaryClass } from "@/components/auth/styles";
 import type { EventWithCount } from "@/components/events/useEvents";
 import { formatEventTime, formatSpots } from "@/lib/events";
+import { googleCalendarUrl, icsCalendarContent } from "@/lib/calendar";
+import { supabase } from "@/lib/supabase";
 
 type JoinResult = Promise<string | null>;
+
+function CalendarActions({ event }: { event: EventWithCount }) {
+  const [open, setOpen] = useState(false);
+
+  function downloadIcs() {
+    const url = URL.createObjectURL(new Blob([icsCalendarContent(event)], { type: "text/calendar;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${event.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.ics`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return <div className="mt-4">
+    <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} className={`${secondaryClass} sm:w-auto`}>Add to calendar</button>
+    {open && <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Calendar options">
+      <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer" className="rounded-full border border-emerald-900 px-4 py-2 text-sm font-bold hover:bg-emerald-100">Google Calendar</a>
+      <button type="button" onClick={downloadIcs} className="rounded-full border border-emerald-900 px-4 py-2 text-sm font-bold hover:bg-emerald-100">Apple Calendar</button>
+    </div>}
+  </div>;
+}
+
+function ReportEvent({ eventId }: { eventId: string }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("inappropriate");
+  const [details, setDetails] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    setBusy(true);
+    const { error } = await supabase.from("event_reports").insert({ event_id: eventId, reason, details: details.trim() || null });
+    setBusy(false);
+    setMessage(error?.code === "23505" ? "You already reported this event." : error ? "Please sign in before reporting an event." : "Report sent to the admins.");
+    if (!error) setOpen(false);
+  }
+
+  return <div className="mt-3">
+    <button type="button" onClick={() => setOpen((value) => !value)} className="text-sm font-semibold text-red-800 underline underline-offset-2">Report this event</button>
+    {open && <div className="mt-2 rounded-xl border border-red-900/20 bg-red-50 p-3">
+      <label htmlFor={`report-reason-${eventId}`} className="block text-sm font-bold">Why are you reporting it?</label>
+      <select id={`report-reason-${eventId}`} value={reason} onChange={(event) => setReason(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-emerald-900/25 bg-white px-3"><option value="inappropriate">Inappropriate content</option><option value="spam">Spam</option><option value="unsafe">Unsafe or suspicious</option><option value="other">Other</option></select>
+      <textarea value={details} onChange={(event) => setDetails(event.target.value)} maxLength={500} rows={3} placeholder="Optional details" className="mt-2 w-full rounded-xl border border-emerald-900/25 bg-white px-3 py-2" />
+      <button type="button" disabled={busy} onClick={() => void submit()} className="mt-2 rounded-full bg-red-800 px-4 py-2 font-bold text-white disabled:opacity-60">{busy ? "Sending…" : "Send report"}</button>
+    </div>}
+    {message && <p className="mt-2 text-sm font-semibold" role="status">{message}</p>}
+  </div>;
+}
 
 function JoinButton({ event, joined, onJoin, onLeave }: {
   event: EventWithCount;
@@ -101,6 +151,8 @@ export default function EventList({ events, joinedIds, loading, error, signedIn,
           ) : (
             <Link href="/login"className={`mt-5 ${secondaryClass} sm:w-auto`}>Sign in to join</Link>
           )}
+          <CalendarActions event={event} />
+          <ReportEvent eventId={event.id} />
         </li>
       ))}
     </ul>
