@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Circle, CircleMarker, MapContainer, Pane, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { Circle, CircleMarker, MapContainer, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type { EventWithCount } from "@/components/events/useEvents";
 import { formatEventTime, formatSpots, newEventAtPointHref, newEventForActivityHref } from "@/lib/events";
 import type { Activity } from "@/lib/types";
@@ -93,19 +93,6 @@ export default function LeafletMap({ activities, events, center = rexburgCenter,
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <DistanceCircle center={center} minMiles={minMiles} maxMiles={maxMiles} />
-        {/* Highlight: a soft green halo behind the dot. The dot itself keeps its size. */}
-        {/* Its own pane sits under the overlay pane (400), so the halo never covers the dot. */}
-        <Pane name="activity-halo" style={{ zIndex: 395 }}>
-          {activities.filter((activity) => highlightedActivityIds.includes(activity.id)).map((activity) => (
-            <CircleMarker
-              key={`halo-${activity.id}`}
-              center={[activity.lat, activity.lon]}
-              interactive={false}
-              pathOptions={{ color: "#047857", weight: 3, fillColor: "#34d399", fillOpacity: 0.45 }}
-              radius={20}
-            />
-          ))}
-        </Pane>
         {activities.map((activity) => {
           const websiteUrl = safeWebsiteUrl(activity.website_url);
           return (
@@ -113,7 +100,9 @@ export default function LeafletMap({ activities, events, center = rexburgCenter,
               key={activity.id}
               center={[activity.lat, activity.lon]}
               bubblingMouseEvents={false}
-              pathOptions={{ color: "#064e3b", fillColor: "#fcd34d", fillOpacity: 0.95 }}
+              pathOptions={highlightedActivityIds.includes(activity.id)
+                ? { color: "#064e3b", fillColor: "#047857", fillOpacity: 1 } // highlighted: same size, green fill
+                : { color: "#064e3b", fillColor: "#fcd34d", fillOpacity: 0.95 }}
               radius={9}
             >
               <Popup>
