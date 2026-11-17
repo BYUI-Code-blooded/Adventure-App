@@ -1,6 +1,6 @@
 -- Only @byui.edu emails (plus a short exception list) can create an account.
--- Run once in the Supabase SQL Editor. Keep the exception list in sync with
--- EXTRA_ALLOWED_EMAILS in lib/validation.ts. Existing accounts are not affected.
+-- Run once in the Supabase SQL Editor. This is the only place the exception list lives.
+-- Existing accounts are not affected: they can always sign in, whatever their email.
 
 create or replace function public.enforce_byui_email()
 returns trigger

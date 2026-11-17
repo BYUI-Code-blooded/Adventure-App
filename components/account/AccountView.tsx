@@ -125,7 +125,7 @@ export default function AccountView() {
           <form onSubmit={saveProfile} noValidate className="rounded-2xl bg-amber-50 p-6 shadow-sm">
             <h2 className="text-lg font-bold">Your profile</h2>
             <p className="mt-2 text-emerald-900/80">
-              Your public name shows next to the events you organize. Your phone is private.
+              Your public name shows next to the events you organize. Your phone stays private until you organize an event. Then signed-in members can see it and your email.
             </p>
 
             <label htmlFor="name" className="mt-6 block text-sm font-bold">

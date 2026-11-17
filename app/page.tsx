@@ -52,6 +52,12 @@ export default function HomePage() {
                 Open the map
               </Link>
               <Link
+                href="/events/new"
+                className="rounded-full border border-amber-100/40 px-6 py-3 text-center font-semibold hover:bg-emerald-800"
+              >
+                Create an event
+              </Link>
+              <Link
                 href="/submit-ideas"
                 className="rounded-full border border-amber-100/40 px-6 py-3 text-center font-semibold hover:bg-emerald-800"
               >
