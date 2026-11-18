@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import EventList from "@/components/events/EventList";
 import { useEvents } from "@/components/events/useEvents";
-import { newEventForActivityHref } from "@/lib/events";
+import DayFilter from "@/components/DayFilter";
+import { WEEKDAYS, eventHasEnded, getEventWeekday, newEventForActivityHref, type Weekday } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import type { Activity, ActivityCategory } from "@/lib/types";
 import { REXBURG_CENTER, distanceMiles, type LatLon } from "@/lib/distance";
@@ -35,6 +36,7 @@ export default function MapView() {
   const [distance, setDistance] = useState({ min: 0, max: DISTANCE_MAX });
   const [origin, setOrigin] = useState<LatLon | null>(null); // null = Rexburg center
   const [locationMessage, setLocationMessage] = useState("");
+  const [day, setDay] = useState<Weekday | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -101,6 +103,17 @@ export default function MapView() {
     });
   }, [activities, category, search, distance, origin]);
 
+  const visibleEvents = useMemo(
+    () => (day ? events.filter((event) => getEventWeekday(event.start_time) === day) : events),
+    [events, day],
+  );
+
+  // Ended events stay in the list for the rest of the day, but they are not shown as dots on the map.
+  const upcomingEvents = useMemo(() => {
+    const now = new Date();
+    return visibleEvents.filter((event) => !eventHasEnded(event.end_time, now));
+  }, [visibleEvents]);
+
   const showResults = !loading && !error && visibleActivities.length > 0;
 
   return (
@@ -162,7 +175,7 @@ export default function MapView() {
           <p className="mt-1 text-sm text-emerald-900/80">Gold dots are activities and green dots are events. Tap anywhere on the map to create an event there.</p>
           <LeafletMap
             activities={visibleActivities}
-            events={events}
+            events={upcomingEvents}
             center={origin ? [origin.lat, origin.lon] : [REXBURG_CENTER.lat, REXBURG_CENTER.lon]}
             minMiles={distance.min}
             maxMiles={distance.max >= DISTANCE_MAX ? null : distance.max}
@@ -171,7 +184,11 @@ export default function MapView() {
       )}
 
       <h2 className="mt-8 text-2xl font-extrabold md:text-3xl">Upcoming events</h2>
-      <EventList events={events} joinedIds={joinedIds} loading={eventsLoading} error={eventsError} signedIn={signedIn} onRetry={reloadEvents} onJoin={join} onLeave={leave} />
+      <div className="mt-4">
+        <DayFilter id="event-day-filter" value={day} onChange={setDay} />
+      </div>
+      <p className="sr-only" aria-live="polite">Showing {visibleEvents.length} events.</p>
+      <EventList dayLabel={day ? WEEKDAYS.find((d) => d.value === day)?.label : undefined} events={visibleEvents} joinedIds={joinedIds} loading={eventsLoading} error={eventsError} signedIn={signedIn} onRetry={reloadEvents} onJoin={join} onLeave={leave} />
 
       {showResults && (
         <>

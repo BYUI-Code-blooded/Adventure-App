@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { errorClass, primaryClass, secondaryClass } from "@/components/auth/styles";
 import type { EventWithCount } from "@/components/events/useEvents";
-import { formatEventTime, formatSpots } from "@/lib/events";
+import { eventHasEnded, formatEventTime, formatSpots } from "@/lib/events";
 
 type JoinResult = Promise<string | null>;
 
@@ -41,7 +41,8 @@ function JoinButton({ event, joined, onJoin, onLeave }: {
   );
 }
 
-export default function EventList({ events, joinedIds, loading, error, signedIn, onRetry, onJoin, onLeave }: {
+export default function EventList({ dayLabel, events, joinedIds, loading, error, signedIn, onRetry, onJoin, onLeave }: {
+  dayLabel?: string;
   events: EventWithCount[];
   joinedIds: string[];
   loading: boolean;
@@ -67,16 +68,24 @@ export default function EventList({ events, joinedIds, loading, error, signedIn,
   if (events.length === 0) {
     return (
       <p className="mt-4 rounded-2xl bg-amber-50 p-6 text-emerald-900/80 shadow-sm">
-        No events yet. Be the first! Tap the map to drop a pin and start one.
+        {dayLabel
+          ? `No events on ${dayLabel} yet. Tap the map to start one.`
+          : "No events yet. Be the first! Tap the map to drop a pin and start one."}
       </p>
     );
   }
 
+  const now = new Date();
   return (
     <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {events.map((event) => (
+      {events.map((event) => {
+        const ended = eventHasEnded(event.end_time, now);
+        return (
         <li key={event.id} id={`event-${event.id}`} className="flex scroll-mt-28 flex-col items-start rounded-2xl bg-amber-50 p-6 shadow-sm">
-          <p className="text-sm font-bold text-emerald-700">{formatEventTime(event.start_time, event.end_time)}</p>
+          <p className="text-sm font-bold text-emerald-700">
+            {formatEventTime(event.start_time, event.end_time)}
+            {ended && <span className="ml-2 rounded-full bg-emerald-900 px-2 py-0.5 text-xs font-semibold text-amber-50">Ended</span>}
+          </p>
           <h3 className="mt-2 text-lg font-bold">{event.name}</h3>
           <p className="mt-2 flex-1 whitespace-pre-line text-emerald-900/80">{event.description}</p>
           {event.address && <p className="mt-3 text-sm text-emerald-900/80">{event.address}</p>}
@@ -90,13 +99,16 @@ export default function EventList({ events, joinedIds, loading, error, signedIn,
             )}
             {event.organizer_phone && <p>{event.organizer_phone}</p>}
           </div>
-          {signedIn ? (
+          {ended ? (
+            <p className="mt-5 text-sm font-semibold text-emerald-900/80">This event has ended.</p>
+          ) : signedIn ? (
             <JoinButton event={event} joined={joinedIds.includes(event.id)} onJoin={onJoin} onLeave={onLeave} />
           ) : (
             <Link href="/login"className={`mt-5 ${secondaryClass} sm:w-auto`}>Sign in to join</Link>
           )}
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

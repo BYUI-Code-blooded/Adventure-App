@@ -1,8 +1,9 @@
 "use client";
 
-// Upcoming events, how many people are going, and joining or leaving as the current user.
+// Events that end today or later (Rexburg time), how many people are going, and joining or leaving as the current user.
 import { useCallback, useEffect, useState } from "react";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
+import { startOfTodayIso } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import type { Event } from "@/lib/types";
 
@@ -59,7 +60,7 @@ export function useEvents() {
         supabase
           .from("events")
           .select("*, event_attendees(count)")
-          .gte("end_time", new Date().toISOString())
+          .gte("end_time", startOfTodayIso())
           .order("start_time", { ascending: true }),
         userId
           ? supabase.from("event_attendees").select("event_id").eq("user_id", userId)
