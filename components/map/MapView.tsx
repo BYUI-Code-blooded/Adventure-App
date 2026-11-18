@@ -9,6 +9,7 @@ import { newEventForActivityHref } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import type { Activity, ActivityCategory } from "@/lib/types";
 import { REXBURG_CENTER, distanceMiles, type LatLon } from "@/lib/distance";
+import ActivitiesSidebar from "@/components/map/ActivitiesSidebar";
 import DistanceSlider, { DISTANCE_MAX } from "@/components/map/DistanceSlider";
 
 const LeafletMap = dynamic(() => import("@/components/map/LeafletMap"), {
@@ -38,6 +39,8 @@ export default function MapView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(null);
+  const [openActivityId, setOpenActivityId] = useState<string | null>(null);
   const { events, joinedIds, loading: eventsLoading, error: eventsError, reload: reloadEvents, signedIn, userId, join, leave } = useEvents();
 
   useEffect(() => {
@@ -160,13 +163,22 @@ export default function MapView() {
         <>
           <p className="mt-4 text-sm font-semibold text-emerald-900/80">Showing {visibleActivities.length} of {activities.length} activities.</p>
           <p className="mt-1 text-sm text-emerald-900/80">Gold dots are activities and green dots are events. Tap anywhere on the map to create an event there.</p>
-          <LeafletMap
-            activities={visibleActivities}
-            events={events}
-            center={origin ? [origin.lat, origin.lon] : [REXBURG_CENTER.lat, REXBURG_CENTER.lon]}
-            minMiles={distance.min}
-            maxMiles={distance.max >= DISTANCE_MAX ? null : distance.max}
-          />
+          <div className="relative mt-4">
+            <LeafletMap
+              activities={visibleActivities}
+              events={events}
+              center={origin ? [origin.lat, origin.lon] : [REXBURG_CENTER.lat, REXBURG_CENTER.lon]}
+              minMiles={distance.min}
+              maxMiles={distance.max >= DISTANCE_MAX ? null : distance.max}
+              highlightedActivityIds={[hoveredActivityId, openActivityId].filter((id): id is string => id !== null)}
+            />
+            <ActivitiesSidebar
+              activities={visibleActivities}
+              openId={openActivityId}
+              onOpen={setOpenActivityId}
+              onHover={setHoveredActivityId}
+            />
+          </div>
         </>
       )}
 
