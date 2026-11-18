@@ -71,6 +71,23 @@ export function eventHasEnded(endTime: string, now: Date = new Date()) {
   return new Date(endTime).getTime() < now.getTime();
 }
 
+/** Turns an ISO timestamp into the value expected by a datetime-local input in Rexburg time. */
+export function isoToRexburgTime(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: EVENT_TIME_ZONE,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(date);
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+}
+
 /** "Sat, Nov 7, 6:00 PM – 8:00 PM", with the end date added when it runs into another day. */
 export function formatEventTime(startTime: string, endTime: string) {
   const day = (time: string) =>

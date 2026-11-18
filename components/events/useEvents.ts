@@ -126,5 +126,5 @@ export function useEvents() {
     return leaveError ? "We couldn't remove you. Please try again." : null;
   }
 
-  return { events, joinedIds, loading, error, reload, signedIn, join, leave };
+  return { events, joinedIds, loading, error, reload, signedIn, userId, join, leave };
 }

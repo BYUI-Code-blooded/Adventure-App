@@ -6,22 +6,10 @@ export const CODE_LENGTH = 8;
 
 export const NAME_MAX = 80;
 
-// Only these sign in: any @byui.edu address, plus a short list of exceptions.
-// Keep EXTRA_ALLOWED_EMAILS in sync with supabase/byui-email-only-migration.sql.
+// New accounts must use this domain (plus the short exception list kept in the database, see
+// supabase/byui-email-only-migration.sql). The database is the only place that decides who may sign in:
+// accounts that already exist can always sign in, so the browser must not block any email itself.
 export const ALLOWED_EMAIL_DOMAIN = "byui.edu";
-const EXTRA_ALLOWED_EMAILS = [
-  "myemail.kristi@gmail.com",
-  "dallaswalker1023@gmail.com",
-  "aktrujillo81@gmail.com",
-  "vinimp2003@gmail.com",
-];
-
-/** True when the email may sign in: @byui.edu or on the exception list. Frontend check only; the database enforces it too. */
-export function isAllowedEmail(value: string) {
-  const email = value.trim().toLowerCase();
-  if (EXTRA_ALLOWED_EMAILS.includes(email)) return true;
-  return /^[^@\s]+@byui\.edu$/.test(email);
-}
 
 /** Keeps only the digits of a pasted or typed code, capped at CODE_LENGTH. */
 export function cleanCode(value: string) {
