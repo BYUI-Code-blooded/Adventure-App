@@ -36,7 +36,7 @@ async function loadOrganizers(rows: Event[], signedIn: boolean) {
   };
 }
 
-export function useEvents() {
+export function useEvents({ creatorOnly = false }: { creatorOnly?: boolean } = {}) {
   const { session, checking } = useAuthProfile();
   const userId = session?.user.id;
   const signedIn = Boolean(session) && !session?.user.is_anonymous;
@@ -52,15 +52,24 @@ export function useEvents() {
     if (checking) return;
     let active = true;
 
+    if (creatorOnly && !signedIn) {
+      return () => {
+        active = false;
+      };
+    }
+
     async function loadEvents() {
       setLoading(true);
       setError(false);
+      let eventsQuery = supabase
+        .from("events")
+        .select("*, event_attendees(count)")
+        .gte("end_time", new Date().toISOString())
+        .order("start_time", { ascending: true });
+      if (creatorOnly && userId) eventsQuery = eventsQuery.eq("creator_id", userId);
+
       const [eventsResult, joinedResult] = await Promise.all([
-        supabase
-          .from("events")
-          .select("*, event_attendees(count)")
-          .gte("end_time", new Date().toISOString())
-          .order("start_time", { ascending: true }),
+        eventsQuery,
         userId
           ? supabase.from("event_attendees").select("event_id").eq("user_id", userId)
           : Promise.resolve({ data: [], error: null }),
@@ -103,7 +112,7 @@ export function useEvents() {
     return () => {
       active = false;
     };
-  }, [checking, signedIn, userId, reloadKey]);
+  }, [checking, creatorOnly, signedIn, userId, reloadKey]);
 
   /** Returns an error message, or null when it worked. */
   async function join(eventId: string) {
