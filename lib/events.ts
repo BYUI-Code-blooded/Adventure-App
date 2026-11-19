@@ -54,6 +54,23 @@ export function rexburgTimeToIso(value: string) {
   return new Date(wallClock - rexburgOffsetMs(new Date(firstGuess))).toISOString();
 }
 
+/** The calendar day of a moment in Rexburg time, as "YYYY-MM-DD". Those strings compare in date order. */
+export function rexburgDayKey(now: Date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: EVENT_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${value("year")}-${value("month")}-${value("day")}`;
+}
+
+/** Midnight at the start of today in Rexburg time, as an ISO timestamp. Correct across daylight saving changes. */
+export function startOfTodayIso(now: Date = new Date()) {
+  return rexburgTimeToIso(`${rexburgDayKey(now)}T00:00`) as string;
+}
+
+/** True once an event's end time has passed. */
+export function eventHasEnded(endTime: string, now: Date = new Date()) {
+  return new Date(endTime).getTime() < now.getTime();
+}
+
 /** Turns an ISO timestamp into the value expected by a datetime-local input in Rexburg time. */
 export function isoToRexburgTime(value: string) {
   const date = new Date(value);
@@ -79,6 +96,23 @@ export function formatEventTime(startTime: string, endTime: string) {
     new Date(time).toLocaleTimeString("en-US", { timeZone: EVENT_TIME_ZONE, hour: "numeric", minute: "2-digit" });
   const sameDay = day(startTime) === day(endTime);
   return `${day(startTime)}, ${clock(startTime)} – ${sameDay ? "" : `${day(endTime)}, `}${clock(endTime)}`;
+}
+
+export type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+
+export const WEEKDAYS: ReadonlyArray<{ value: Weekday; label: string }> = [
+  { value: "Mon", label: "Monday" },
+  { value: "Tue", label: "Tuesday" },
+  { value: "Wed", label: "Wednesday" },
+  { value: "Thu", label: "Thursday" },
+  { value: "Fri", label: "Friday" },
+  { value: "Sat", label: "Saturday" },
+  { value: "Sun", label: "Sunday" },
+];
+
+/** The weekday a timestamp falls on in Rexburg time, so a 9 PM Saturday event never lands on Sunday. */
+export function getEventWeekday(startTime: string): Weekday {
+  return new Intl.DateTimeFormat("en-US", { timeZone: EVENT_TIME_ZONE, weekday: "short" }).format(new Date(startTime)) as Weekday;
 }
 
 /** "3 of 10 going", or "3 going" for an unlimited event. */

@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import ActivityCard from "@/components/activities/ActivityCard";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
+import DayFilter from "@/components/DayFilter";
+import { activityIsCurrent, activityIsOnDay, getActivityDays } from "@/lib/activity-days";
+import type { Weekday } from "@/lib/events";
 import { getFoodOpenStatus } from "@/lib/food-hours";
 import type { Activity, ActivityCategory } from "@/lib/types";
 
@@ -17,14 +20,20 @@ type ActivitiesGridProps = {
 type TriStateFilter = "any" | "yes" | "no" | "unknown";
 
 export default function ActivitiesGrid({
-  activities,
+  activities: allActivities,
   category,
   loading,
   error,
   onRetry,
 }: ActivitiesGridProps) {
+  // Weekend listings with a one-time date stop showing the day after it (Rexburg time).
+  const activities = useMemo(
+    () => (category === "weekend" ? allActivities.filter((activity) => activityIsCurrent(activity)) : allActivities),
+    [allActivities, category],
+  );
   const [search, setSearch] = useState("");
   const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [day, setDay] = useState<Weekday | null>(null);
   const [walkable, setWalkable] = useState<TriStateFilter>("any");
   const [delivery, setDelivery] = useState<TriStateFilter>("any");
   const [openNowOnly, setOpenNowOnly] = useState(false);
@@ -40,6 +49,9 @@ export default function ActivitiesGrid({
     return () => window.clearInterval(interval);
   }, [category]);
 
+  // Weekend always gets the day filter. Food never does. Indoor and outdoor get it only if some listing has day info.
+  const showDayFilter = category === "weekend" || (category !== "food" && activities.some((activity) => getActivityDays(activity) !== null));
+
   const normalizedSearch = search.trim().toLocaleLowerCase();
   const visibleActivities = useMemo(
     () => activities.filter((activity) => {
@@ -54,14 +66,16 @@ export default function ActivitiesGrid({
         (!openNowOnly || getFoodOpenStatus(activity.weekly_hours, now).open === true) &&
         (minimumRating === "any" || (activity.google_rating != null && activity.google_rating >= Number(minimumRating)))
       );
-      return matchesSearch && (!featuredOnly || activity.is_featured) && matchesFoodFilters;
+      const matchesDay = !showDayFilter || !day || activityIsOnDay(activity, day);
+      return matchesSearch && matchesDay && (!featuredOnly || activity.is_featured) && matchesFoodFilters;
     }),
-    [activities, category, delivery, featuredOnly, minimumRating, normalizedSearch, now, openNowOnly, walkable],
+    [activities, category, day, delivery, featuredOnly, showDayFilter, minimumRating, normalizedSearch, now, openNowOnly, walkable],
   );
 
   const resetFilters = () => {
     setSearch("");
     setFeaturedOnly(false);
+    setDay(null);
     setWalkable("any");
     setDelivery("any");
     setOpenNowOnly(false);
@@ -126,6 +140,10 @@ export default function ActivitiesGrid({
             Featured only
           </label>
         </div>
+        {showDayFilter && <DayFilter id={`${category}-day-filter`} value={day} onChange={setDay} />}
+        {category !== "food" && (day !== null || search || featuredOnly) && (
+          <button type="button" onClick={resetFilters} className="min-h-11 self-start px-2 text-sm font-bold text-emerald-800 underline underline-offset-2 hover:text-emerald-600">Clear filters</button>
+        )}
         {category === "food" && (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <label className="text-sm font-bold text-emerald-800">

@@ -5,10 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import EventList from "@/components/events/EventList";
 import { useEvents } from "@/components/events/useEvents";
-import { newEventForActivityHref } from "@/lib/events";
+import DayFilter from "@/components/DayFilter";
+import { WEEKDAYS, eventHasEnded, getEventWeekday, newEventForActivityHref, type Weekday } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import type { Activity, ActivityCategory } from "@/lib/types";
 import { REXBURG_CENTER, distanceMiles, type LatLon } from "@/lib/distance";
+import ActivitiesSidebar from "@/components/map/ActivitiesSidebar";
 import DistanceSlider, { DISTANCE_MAX } from "@/components/map/DistanceSlider";
 
 const LeafletMap = dynamic(() => import("@/components/map/LeafletMap"), {
@@ -35,9 +37,12 @@ export default function MapView() {
   const [distance, setDistance] = useState({ min: 0, max: DISTANCE_MAX });
   const [origin, setOrigin] = useState<LatLon | null>(null); // null = Rexburg center
   const [locationMessage, setLocationMessage] = useState("");
+  const [day, setDay] = useState<Weekday | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(null);
+  const [openActivityId, setOpenActivityId] = useState<string | null>(null);
   const { events, joinedIds, loading: eventsLoading, error: eventsError, reload: reloadEvents, signedIn, userId, join, leave } = useEvents();
 
   useEffect(() => {
@@ -101,6 +106,17 @@ export default function MapView() {
     });
   }, [activities, category, search, distance, origin]);
 
+  const visibleEvents = useMemo(
+    () => (day ? events.filter((event) => getEventWeekday(event.start_time) === day) : events),
+    [events, day],
+  );
+
+  // Ended events stay in the list for the rest of the day, but they are not shown as dots on the map.
+  const upcomingEvents = useMemo(() => {
+    const now = new Date();
+    return visibleEvents.filter((event) => !eventHasEnded(event.end_time, now));
+  }, [visibleEvents]);
+
   const showResults = !loading && !error && visibleActivities.length > 0;
 
   return (
@@ -160,18 +176,31 @@ export default function MapView() {
         <>
           <p className="mt-4 text-sm font-semibold text-emerald-900/80">Showing {visibleActivities.length} of {activities.length} activities.</p>
           <p className="mt-1 text-sm text-emerald-900/80">Gold dots are activities and green dots are events. Tap anywhere on the map to create an event there.</p>
-          <LeafletMap
-            activities={visibleActivities}
-            events={events}
-            center={origin ? [origin.lat, origin.lon] : [REXBURG_CENTER.lat, REXBURG_CENTER.lon]}
-            minMiles={distance.min}
-            maxMiles={distance.max >= DISTANCE_MAX ? null : distance.max}
-          />
+          <div className="relative mt-4">
+            <LeafletMap
+              activities={visibleActivities}
+              events={upcomingEvents}
+              center={origin ? [origin.lat, origin.lon] : [REXBURG_CENTER.lat, REXBURG_CENTER.lon]}
+              minMiles={distance.min}
+              maxMiles={distance.max >= DISTANCE_MAX ? null : distance.max}
+              highlightedActivityIds={[hoveredActivityId, openActivityId].filter((id): id is string => id !== null)}
+            />
+            <ActivitiesSidebar
+              activities={visibleActivities}
+              openId={openActivityId}
+              onOpen={setOpenActivityId}
+              onHover={setHoveredActivityId}
+            />
+          </div>
         </>
       )}
 
       <h2 className="mt-8 text-2xl font-extrabold md:text-3xl">Upcoming events</h2>
-      <EventList events={events} joinedIds={joinedIds} loading={eventsLoading} error={eventsError} signedIn={signedIn} userId={userId} onRetry={reloadEvents} onJoin={join} onLeave={leave} />
+      <div className="mt-4">
+        <DayFilter id="event-day-filter" value={day} onChange={setDay} />
+      </div>
+      <p className="sr-only" aria-live="polite">Showing {visibleEvents.length} events.</p>
+      <EventList dayLabel={day ? WEEKDAYS.find((d) => d.value === day)?.label : undefined} events={visibleEvents} joinedIds={joinedIds} loading={eventsLoading} error={eventsError} signedIn={signedIn} userId={userId} onRetry={reloadEvents} onJoin={join} onLeave={leave} />
 
       {showResults && (
         <>
