@@ -91,7 +91,7 @@ function JoinButton({ event, joined, onJoin, onLeave }: {
   );
 }
 
-export default function EventList({ dayLabel, events, joinedIds, loading, error, signedIn, userId, onRetry, onJoin, onLeave }: {
+export default function EventList({ dayLabel, events, joinedIds, loading, error, signedIn, userId, onRetry, onJoin, onLeave, emptyMessage }: {
   dayLabel?: string;
   events: EventWithCount[];
   joinedIds: string[];
@@ -102,6 +102,7 @@ export default function EventList({ dayLabel, events, joinedIds, loading, error,
   onRetry: () => void;
   onJoin: (id: string) => JoinResult;
   onLeave: (id: string) => JoinResult;
+  emptyMessage?: string;
 }) {
   if (loading && events.length === 0) {
     return <p className="mt-4 rounded-2xl bg-amber-50 p-6 text-emerald-900/80 shadow-sm" role="status">Loading events…</p>;
@@ -119,9 +120,9 @@ export default function EventList({ dayLabel, events, joinedIds, loading, error,
   if (events.length === 0) {
     return (
       <p className="mt-4 rounded-2xl bg-amber-50 p-6 text-emerald-900/80 shadow-sm">
-        {dayLabel
+        {emptyMessage ?? (dayLabel
           ? `No events on ${dayLabel} yet. Tap the map to start one.`
-          : "No events yet. Be the first! Tap the map to drop a pin and start one."}
+          : "No events yet. Be the first! Tap the map to drop a pin and start one.")}
       </p>
     );
   }

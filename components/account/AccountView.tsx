@@ -9,6 +9,8 @@ import { NAME_MAX, validateName, validatePhone } from "@/lib/validation";
 import type { Role } from "@/lib/types";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
 import { errorClass, inputClass, primaryClass, secondaryClass } from "@/components/auth/styles";
+import EventList from "@/components/events/EventList";
+import { useEvents } from "@/components/events/useEvents";
 
 const roleLabels: Record<Role, string> = {
   user: "Member",
@@ -27,6 +29,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 export default function AccountView() {
   const router = useRouter();
   const { session, checking, profile, setProfile } = useAuthProfile();
+  const myEvents = useEvents({ creatorOnly: true });
 
   const [name, setName] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export default function AccountView() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!checking && !session) router.replace("/login");
+    if (!checking && (!session || session.user.is_anonymous)) router.replace("/login");
   }, [checking, session, router]);
 
   if (checking || (session && profile === undefined)) {
@@ -48,7 +51,7 @@ export default function AccountView() {
     );
   }
 
-  if (!session) {
+  if (!session || session.user.is_anonymous) {
     return (
       <Shell>
         <div className="mx-auto max-w-6xl px-4 py-12">
@@ -225,6 +228,23 @@ export default function AccountView() {
                 </Link>
               )}
             </div>
+          </div>
+
+          <div className="rounded-2xl bg-amber-50 p-6 shadow-sm md:col-span-2">
+            <h2 className="text-2xl font-extrabold md:text-3xl">My events</h2>
+            <p className="mt-2 text-emerald-900/80">Upcoming and in-progress events you organize.</p>
+            <EventList
+              events={myEvents.events}
+              joinedIds={myEvents.joinedIds}
+              loading={myEvents.loading}
+              error={myEvents.error}
+              signedIn={myEvents.signedIn}
+              userId={myEvents.userId}
+              onRetry={myEvents.reload}
+              onJoin={myEvents.join}
+              onLeave={myEvents.leave}
+              emptyMessage="You don't have any active events yet."
+            />
           </div>
         </div>
       </section>
