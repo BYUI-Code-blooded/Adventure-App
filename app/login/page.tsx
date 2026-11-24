@@ -11,8 +11,8 @@ export default function LoginPage() {
   return (
     <div className="flex flex-1 flex-col bg-amber-50 text-emerald-950">
       <main className="flex flex-1 flex-col md:grid md:grid-cols-2">
-        {/* Animated scene: the top of the screen on phones, half the screen on desktop */}
-        <section className="relative h-[46svh] min-h-72 overflow-hidden bg-emerald-900 text-amber-50 md:h-auto">
+        {/* Animated scene: the top of the screen on phones (it stays put while the card scrolls over it), half the screen on desktop */}
+        <section className="sticky top-20 h-[46svh] min-h-72 overflow-hidden bg-emerald-900 text-amber-50 md:relative md:top-0 md:h-auto">
           <AdventureScene />
           <div className="pointer-events-none relative z-10 max-w-xs p-6 md:max-w-sm md:p-12">
             <p className="text-xs font-semibold uppercase tracking-widest text-amber-300 md:text-sm">
@@ -24,8 +24,8 @@ export default function LoginPage() {
           </div>
         </section>
 
-        {/* On phones the form is a card that slides up over the bottom of the scene */}
-        <section className="relative z-10 -mt-16 rounded-t-3xl bg-amber-50 px-4 pt-10 pb-12 md:mt-0 md:flex md:items-center md:rounded-none md:px-16 md:py-12">
+        {/* On phones the form is a card that slides up over the scene as you scroll, until it fills the screen */}
+        <section className="relative z-10 -mt-16 min-h-[calc(100svh-5rem)] rounded-t-3xl bg-amber-50 px-4 pt-10 pb-12 md:mt-0 md:min-h-0 md:flex md:items-center md:rounded-none md:px-16 md:py-12">
           <div className="mx-auto w-full max-w-md">
             <LoginForm />
           </div>
