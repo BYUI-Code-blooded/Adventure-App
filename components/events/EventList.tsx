@@ -48,7 +48,14 @@ function ReportEvent({ eventId }: { eventId: string }) {
   }
 
   return <div className="mt-3">
-    <button type="button" onClick={() => setOpen((value) => !value)} className="text-sm font-semibold text-red-800 underline underline-offset-2">Report this event</button>
+    <button
+      type="button"
+      onClick={() => setOpen((value) => !value)}
+      aria-expanded={open}
+      className="min-h-11 cursor-pointer rounded-lg py-2 text-left text-sm font-semibold text-red-800 underline underline-offset-4 hover:text-red-950 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-800"
+    >
+      Report this event
+    </button>
     {open && <div className="mt-2 rounded-xl border border-red-900/20 bg-red-50 p-3">
       <label htmlFor={`report-reason-${eventId}`} className="block text-sm font-bold">Why are you reporting it?</label>
       <select id={`report-reason-${eventId}`} value={reason} onChange={(event) => setReason(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-emerald-900/25 bg-white px-3"><option value="inappropriate">Inappropriate content</option><option value="spam">Spam</option><option value="unsafe">Unsafe or suspicious</option><option value="other">Other</option></select>
@@ -129,7 +136,7 @@ export default function EventList({ dayLabel, events, joinedIds, loading, error,
 
   const now = new Date();
   return (
-    <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="mt-4 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {events.map((event) => {
         const ended = eventHasEnded(event.end_time, now);
         return (
