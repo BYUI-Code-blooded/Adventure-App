@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { errorClass, primaryClass, secondaryClass } from "@/components/auth/styles";
+import EventComments from "@/components/events/EventComments";
 import type { EventWithCount } from "@/components/events/useEvents";
 import { eventHasEnded, formatEventTime, formatSpots } from "@/lib/events";
 import { googleCalendarUrl, icsCalendarContent } from "@/lib/calendar";
@@ -176,6 +177,7 @@ export default function EventList({ dayLabel, events, joinedIds, loading, error,
           )}
           <CalendarActions event={event} />
           <ReportEvent eventId={event.id} />
+          <EventComments eventId={event.id} commentCount={event.comments} signedIn={signedIn} userId={userId} />
         </li>
         );
       })}
