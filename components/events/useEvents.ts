@@ -11,12 +11,16 @@ import type { Event } from "@/lib/types";
 // filled in for signed-in members (see public.event_organizer_contacts).
 export type EventWithCount = Event & {
   going: number;
+  comments: number;
   organizer_name: string | null;
   organizer_email: string | null;
   organizer_phone: string | null;
 };
 
-type EventRow = Event & { event_attendees: Array<{ count: number }> };
+type EventRow = Event & {
+  event_attendees: Array<{ count: number }>;
+  event_comments: Array<{ count: number }>;
+};
 type Contact = { event_id: string; email: string | null; phone: string | null };
 
 /** Organizer names (by creator id) for everyone, and contact details (by event id) for signed-in members. */
@@ -64,7 +68,7 @@ export function useEvents({ creatorOnly = false }: { creatorOnly?: boolean } = {
       setError(false);
       let eventsQuery = supabase
         .from("events")
-        .select("*, event_attendees(count)")
+        .select("*, event_attendees(count), event_comments(count)")
         .gte("end_time", creatorOnly ? new Date().toISOString() : startOfTodayIso())
         .order("start_time", { ascending: true });
       if (creatorOnly && userId) eventsQuery = eventsQuery.eq("creator_id", userId);
@@ -89,11 +93,12 @@ export function useEvents({ creatorOnly = false }: { creatorOnly?: boolean } = {
       if (organizers.failed) {
         setError(true);
       } else {
-        setEvents(rows.map(({ event_attendees, ...event }) => {
+        setEvents(rows.map(({ event_attendees, event_comments, ...event }) => {
           const contact = organizers.contacts.get(event.id);
           return {
             ...event,
             going: event_attendees[0]?.count ?? 0,
+            comments: event_comments[0]?.count ?? 0,
             organizer_name: event.creator_id ? organizers.names.get(event.creator_id) ?? null : null,
             organizer_email: contact?.email ?? null,
             organizer_phone: contact?.phone ?? null,
