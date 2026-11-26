@@ -37,6 +37,7 @@ The source of truth is `supabase/schema.sql`.
 - `activities`: places or things to do (`name`, `description`, `address`, `lat`, `lng`, `photo_url`, `category`, `is_featured`, `created_by`). Only staff (admin or developer) can set `is_featured`.
 - `events`: something happening at a time (`name`, `description`, `creator_id`, `start_time`, `end_time`, `address` and/or `lat` + `lon`). `activity_id` is optional and `max_participants` null means unlimited. The organizer is `creator_id`: their name comes from `public_profiles`, and their email and phone from the `event_organizer_contacts(event_ids)` function, which only answers signed-in members and only for events that haven't ended.
 - `event_attendees`: who joined which event (composite primary key `event_id` + `user_id`). The count is the number of rows; joins are rejected once the event is full.
+- `event_comments`: per-event comments (`event_id`, `author_id`, `body` 1 to 500 characters, `created_at`); see `supabase/event-comments-migration.sql`. Comments are deleted with their event, and `author_id` becomes null if the author deletes their account. Anyone can read; only non-anonymous signed-in users can insert (as themselves); authors and staff can delete; there is no update path. Authors' names come from `public_profiles`, never from `profiles`.
 
 Use `start_time timestamptz`; group by day in `America/Denver`.
 

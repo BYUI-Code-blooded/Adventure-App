@@ -13,6 +13,7 @@ export function useEventComments({ eventId, enabled }: { eventId: string; enable
   const [comments, setComments] = useState<EventCommentWithAuthor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const reload = useCallback(() => setReloadKey((key) => key + 1), []);
 
@@ -49,6 +50,7 @@ export function useEventComments({ eventId, enabled }: { eventId: string; enable
       } else {
         const names = new Map((namesResult.data ?? []).map((row: { id: string; name: string | null }) => [row.id, row.name]));
         setComments(rows.map((row) => ({ ...row, author_name: row.author_id ? names.get(row.author_id) ?? null : null })));
+        setLoaded(true);
       }
       setLoading(false);
     }
@@ -81,9 +83,10 @@ export function useEventComments({ eventId, enabled }: { eventId: string; enable
   async function remove(commentId: string) {
     const { error: removeError } = await supabase.from("event_comments").delete().eq("id", commentId);
     if (removeError) return "We couldn't delete your comment. Please try again.";
+    setComments((current) => current.filter((comment) => comment.id !== commentId));
     reload();
     return null;
   }
 
-  return { comments, loading, error, reload, post, remove };
+  return { comments, loading, loaded, error, reload, post, remove };
 }
