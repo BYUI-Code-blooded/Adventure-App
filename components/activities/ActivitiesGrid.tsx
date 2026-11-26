@@ -66,7 +66,7 @@ export default function ActivitiesGrid({
         (!openNowOnly || getFoodOpenStatus(activity.weekly_hours, now).open === true) &&
         (minimumRating === "any" || (activity.google_rating != null && activity.google_rating >= Number(minimumRating)))
       );
-      const matchesDay = !showDayFilter || !day || activityIsOnDay(activity, day);
+      const matchesDay = !showDayFilter || !day || activityIsOnDay(activity, day, category === "weekend");
       return matchesSearch && matchesDay && (!featuredOnly || activity.is_featured) && matchesFoodFilters;
     }),
     [activities, category, day, delivery, featuredOnly, showDayFilter, minimumRating, normalizedSearch, now, openNowOnly, walkable],
@@ -185,7 +185,8 @@ export default function ActivitiesGrid({
         </ul>
       ) : (
         <p className="mt-8 rounded-2xl bg-amber-50 p-6 text-emerald-900/80 shadow-sm" role="status">
-          No activities match those filters. Try a different search or clear a filter. Restaurants without listed hours won&apos;t appear when Open now is selected.
+          No activities match those filters. Try a different search or clear a filter.
+          {category === "food" && " Restaurants without listed hours won't appear when Open now is selected."}
         </p>
       )}
       <p className="sr-only" aria-live="polite">Showing {visibleActivities.length} activities.</p>

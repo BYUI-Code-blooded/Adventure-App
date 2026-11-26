@@ -1,3 +1,6 @@
+-- DO NOT RUN THIS IN PRODUCTION. It adds fake "TEST:" listings that visitors would see.
+-- Use it only on a throwaway/dev database. To remove these rows, see remove-weekend-test-items.sql.
+--
 -- Run in the Supabase SQL Editor to add five clearly labeled sample listings.
 -- Safe to run more than once: existing rows with these names are left alone.
 -- The addresses and coordinates are sample Rexburg locations, not event details.

@@ -23,7 +23,7 @@ export default function WeekendPage() {
           <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
             <h2 className="text-2xl font-extrabold md:text-3xl">See what’s happening</h2>
             <p className="mt-3 max-w-xl text-emerald-900/80">
-              The TEST listings below are examples for checking this page. They are not scheduled events.
+              Pick a day to see what&apos;s on, or browse everything.
             </p>
             <div className="mt-6">
               <ActivityDirectory category="weekend" />

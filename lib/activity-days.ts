@@ -30,7 +30,8 @@ function dateFromWhen(when: string) {
 }
 
 function namedWeekdays(when: string) {
-  return WEEKDAYS.filter(({ label }) => new RegExp(`\b${label}s?\b`, "i").test(when)).map(({ value }) => value);
+  // "\\b" (escaped) so the template literal produces a regex word boundary, not a backspace character.
+  return WEEKDAYS.filter(({ label }) => new RegExp(`\\b${label}s?\\b`, "i").test(when)).map(({ value }) => value);
 }
 
 function daysFromWhen(description: string | null | undefined): Weekday[] | null {
@@ -64,7 +65,11 @@ export function getActivityDays(activity: DayInfo): Weekday[] | null {
   return daysFromHours(activity.weekly_hours) ?? daysFromWhen(activity.description);
 }
 
-export function activityIsOnDay(activity: DayInfo, day: Weekday) {
+/**
+ * Whether an activity is available on a day. With no day info it counts as any day, unless `strict`
+ * is true (used for weekend events): then it only shows under "All days", never for a specific day.
+ */
+export function activityIsOnDay(activity: DayInfo, day: Weekday, strict = false) {
   const days = getActivityDays(activity);
-  return days === null || days.includes(day);
+  return days === null ? !strict : days.includes(day);
 }

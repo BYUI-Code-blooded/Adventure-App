@@ -2,9 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CalendarIcon, ExploreIcon, FoodIcon, HomeIcon } from "@/components/icons";
 import { newEventForActivityHref } from "@/lib/events";
 import { getFoodOpenStatus } from "@/lib/food-hours";
 import type { Activity } from "@/lib/types";
+
+// Icon shown on the placeholder when a card has no photo to show.
+const PLACEHOLDER_ICONS: Record<Activity["category"], typeof CalendarIcon> = {
+  weekend: CalendarIcon,
+  food: FoodIcon,
+  indoor: HomeIcon,
+  outdoor: ExploreIcon,
+};
 
 // Brand mark from the restaurant's website, used when the row has no working photo_url.
 function getWebsiteLogo(websiteUrl?: string | null) {
@@ -104,11 +113,13 @@ export default function ActivityCard({ activity, showPhoto }: { activity: Activi
   const categoryLabel = activity.category.charAt(0).toUpperCase() + activity.category.slice(1);
   const usingPhoto = Boolean(activity.photo_url) && !imageFailed;
   const logoUrl = activity.category === "food" && !logoFailed ? getWebsiteLogo(activity.website_url) : undefined;
-  const imageUrl = usingPhoto ? activity.photo_url : logoUrl;
+  // Real photos (and logos) are only shown to signed-in users. Otherwise the placeholder fills the slot.
+  const imageUrl = showPhoto ? (usingPhoto ? activity.photo_url : logoUrl) : undefined;
+  const PlaceholderIcon = PLACEHOLDER_ICONS[activity.category] ?? CalendarIcon;
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl bg-amber-50 shadow-sm">
-      {!showPhoto ? null : imageUrl ? (
+      {imageUrl ? (
         // Use the browser image element so database photo URLs do not need Next image host config.
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -120,12 +131,15 @@ export default function ActivityCard({ activity, showPhoto }: { activity: Activi
           className={`aspect-video w-full bg-white ${usingPhoto ? "object-cover" : "object-contain p-10"}`}
         />
       ) : (
+        // Decorative: the card heading already names the listing, so screen readers skip this.
         <div
-          role="img"
-          aria-label={`Photo unavailable for ${activity.name}`}
-          className="grid aspect-video w-full place-items-center bg-emerald-900 px-4 text-center text-amber-300"
+          aria-hidden="true"
+          className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-2xl bg-emerald-900 px-4 text-center"
         >
-          <span className="rounded-full border border-amber-300/60 px-4 py-2 text-sm font-bold">
+          <span className="grid size-12 place-items-center rounded-full bg-emerald-800 text-amber-300">
+            <PlaceholderIcon className="size-6" />
+          </span>
+          <span className="text-sm font-semibold uppercase tracking-widest text-amber-300">
             {categoryLabel} activity
           </span>
         </div>
