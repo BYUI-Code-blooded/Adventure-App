@@ -2,11 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import EventList from "@/components/events/EventList";
 import { useEvents } from "@/components/events/useEvents";
 import DayFilter from "@/components/DayFilter";
-import { WEEKDAYS, eventHasEnded, getEventWeekday, newEventForActivityHref, type Weekday } from "@/lib/events";
+import { WEEKDAYS, eventHasEnded, getEventWeekday, type Weekday } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import type { Activity, ActivityCategory } from "@/lib/types";
 import { REXBURG_CENTER, distanceMiles, type LatLon } from "@/lib/distance";
@@ -201,24 +200,6 @@ export default function MapView() {
       </div>
       <p className="sr-only" aria-live="polite">Showing {visibleEvents.length} events.</p>
       <EventList dayLabel={day ? WEEKDAYS.find((d) => d.value === day)?.label : undefined} events={visibleEvents} joinedIds={joinedIds} loading={eventsLoading} error={eventsError} signedIn={signedIn} userId={userId} onRetry={reloadEvents} onJoin={join} onLeave={leave} />
-
-      {showResults && (
-        <>
-          <h2 className="mt-8 text-2xl font-extrabold md:text-3xl">Activities</h2>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleActivities.map((activity) => (
-              <li key={activity.id} className="rounded-2xl bg-amber-50 p-5 shadow-sm">
-                <h3 className="text-lg font-bold">{activity.name}</h3>
-                <p className="mt-1 text-sm font-semibold text-emerald-700">{activity.category}</p>
-                {activity.address && <p className="mt-2 text-sm text-emerald-900/80">{activity.address}</p>}
-                <Link href={newEventForActivityHref(activity.id)} className="mt-3 inline-flex min-h-11 items-center rounded-full border-2 border-emerald-900 px-5 py-2 font-semibold hover:bg-emerald-900 hover:text-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">
-                  Create an event
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
     </div>
   );
 }
