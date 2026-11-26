@@ -60,3 +60,12 @@ export type Event = {
   recurrence_rule?: string | null;
   recurrence_end_date?: string | null;
 };
+
+// A row of public.event_comments. author_id is null if the author deleted their account.
+export type EventComment = {
+  id: string;
+  event_id: string;
+  author_id: string | null;
+  body: string;
+  created_at: string;
+};

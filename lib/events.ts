@@ -6,7 +6,7 @@ export const EVENT_DESCRIPTION_MAX = 1000;
 export const EVENT_SPOTS_MAX = 1000;
 
 // Events happen in Rexburg, so times are entered and shown in Rexburg time wherever the visitor is.
-const EVENT_TIME_ZONE = "America/Denver";
+export const EVENT_TIME_ZONE ="America/Denver";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type Point = { lat: number; lon: number };
