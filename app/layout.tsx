@@ -28,11 +28,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      {/* Bottom padding on mobile leaves room for the fixed bottom nav. */}
-      <body className="min-h-full flex flex-col pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
+      <body className="min-h-full flex flex-col">
         <SiteNav />
         {children}
-        <footer className="bg-emerald-900 text-emerald-100">
+        {/* Bottom padding on mobile leaves room for the fixed bottom nav. It lives on the footer (not the body) so the emerald color runs down under the nav instead of showing the body background. */}
+        <footer className="bg-emerald-900 pb-[calc(4.25rem+env(safe-area-inset-bottom))] text-emerald-100 md:pb-0">
           <div className="mx-auto max-w-6xl px-4 py-6 text-sm">
             <p className="font-semibold uppercase tracking-widest text-amber-300">
               For educational purposes only
