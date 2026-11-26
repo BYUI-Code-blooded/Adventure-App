@@ -1,5 +1,6 @@
 // Rules for creating an event. The database enforces the same limits (see supabase/events-migration.sql).
 import { ADDRESS_MAX, MAX_DISTANCE_KM, isNearRexburg } from "@/lib/suggestions";
+import type { RecurrenceFrequency } from "@/lib/types";
 
 export const EVENT_NAME_MAX = 100;
 export const EVENT_DESCRIPTION_MAX = 1000;
@@ -148,6 +149,14 @@ export function validateEventEnd(start: string | null, end: string | null) {
   const length = new Date(end).getTime() - new Date(start).getTime();
   if (length <= 0) return "The end time needs to be after the start time.";
   if (length > DAY_MS) return "Events can last up to 24 hours.";
+  return null;
+}
+
+/** A repeating event needs a last day, and it can't come before the event's first day (compared in Rexburg time). */
+export function validateRecurrenceEnd(frequency: RecurrenceFrequency, endDate: string, startIso: string | null) {
+  if (frequency === "none") return null;
+  if (!endDate) return "Choose when your event stops repeating.";
+  if (startIso && endDate < rexburgDayKey(new Date(startIso))) return "Pick an end date on or after the event's first day.";
   return null;
 }
 

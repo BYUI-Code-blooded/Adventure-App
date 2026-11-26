@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ALLOWED_EMAIL_DOMAIN, CODE_LENGTH, NAME_MAX, cleanCode, isCodeComplete, validateName, validatePhone } from "@/lib/validation";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
+import { useFocusFirstError } from "@/components/auth/useFocusFirstError";
 import { errorClass, inputClass, primaryClass, secondaryClass } from "@/components/auth/styles";
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -55,6 +56,7 @@ export default function LoginForm() {
   const [saveError, setSaveError] = useState("");
 
   const [linkError, setLinkError] = useState("");
+  const { formRef, reportFailure } = useFocusFirstError();
   useEffect(() => {
     const timer = setTimeout(() => setLinkError(landingError ? "That sign-in link didn't work. Request a new code instead." : ""), 0);
     return () => clearTimeout(timer);
@@ -84,6 +86,7 @@ export default function LoginForm() {
     if (error) {
       setStatus("error");
       setMessage(friendlyError(error.message, error.status));
+      reportFailure();
       return;
     }
     setEmail(clean);
@@ -99,6 +102,7 @@ export default function LoginForm() {
     setVerifying(false);
     if (error) {
       setCodeError("That code is wrong or has expired. Check it, or send a new one.");
+      reportFailure();
     }
   }
 
@@ -115,7 +119,10 @@ export default function LoginForm() {
     const phoneProblem = validatePhone(phone);
     setNameError(nameProblem ?? "");
     setPhoneError(phoneProblem ?? "");
-    if (nameProblem || phoneProblem) return;
+    if (nameProblem || phoneProblem) {
+      reportFailure();
+      return;
+    }
 
     setSaving(true);
     setSaveError("");
@@ -128,6 +135,7 @@ export default function LoginForm() {
     setSaving(false);
     if (error) {
       setSaveError("We couldn't save your details. Please try again.");
+      reportFailure();
       return;
     }
     setProfile(data);
@@ -143,7 +151,7 @@ export default function LoginForm() {
 
   if (session && needsName) {
     return (
-      <form onSubmit={saveProfile} noValidate>
+      <form ref={formRef} onSubmit={saveProfile} noValidate>
         <p className="text-sm font-semibold uppercase tracking-widest text-emerald-700">One last step</p>
         <h1 className="mt-3 text-4xl font-extrabold leading-tight">What should we call you?</h1>
         <p className="mt-4 text-emerald-900/80">
@@ -223,6 +231,7 @@ export default function LoginForm() {
         </p>
 
         <form
+          ref={formRef}
           onSubmit={(event) => {
             event.preventDefault();
             verify(code);
@@ -243,14 +252,15 @@ export default function LoginForm() {
             placeholder={"0".repeat(CODE_LENGTH)}
             value={code}
             onChange={(event) => handleCodeChange(event.target.value)}
-            aria-describedby="code-hint"
+            aria-invalid={Boolean(codeError)}
+            aria-describedby={codeError ? "code-hint code-error" : "code-hint"}
             className={`mt-2 text-center text-2xl font-bold tracking-[0.4em] ${inputClass}`}
           />
           <p id="code-hint" className="mt-2 text-sm text-emerald-900/80">
             {code.length}/{CODE_LENGTH} digits. It signs you in as soon as it&apos;s complete.
           </p>
           {codeError && (
-            <p role="alert" className={errorClass}>
+            <p id="code-error" role="alert" className={errorClass}>
               {codeError}
             </p>
           )}
@@ -283,7 +293,7 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={sendCode}>
+    <form ref={formRef} onSubmit={sendCode}>
       <p className="text-sm font-semibold uppercase tracking-widest text-emerald-700">Join the trail</p>
       <h1 className="mt-3 text-4xl font-extrabold leading-tight">Sign in to plan outings.</h1>
       <p className="mt-4 text-emerald-900/80">
@@ -304,11 +314,13 @@ export default function LoginForm() {
         placeholder="you@example.com"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
+        aria-invalid={status === "error"}
+        aria-describedby={status === "error" || linkError ? "email-error" : undefined}
         className={`mt-2 ${inputClass}`}
       />
 
       {(status === "error" || linkError) && (
-        <p role="alert" className={errorClass}>
+        <p id="email-error" role="alert" className={errorClass}>
           {status === "error" ? message : linkError}
         </p>
       )}

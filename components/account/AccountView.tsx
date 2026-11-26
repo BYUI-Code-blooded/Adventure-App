@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { NAME_MAX, validateName, validatePhone } from "@/lib/validation";
 import type { Role } from "@/lib/types";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
+import { useFocusFirstError } from "@/components/auth/useFocusFirstError";
 import { errorClass, inputClass, primaryClass, secondaryClass } from "@/components/auth/styles";
 import EventList from "@/components/events/EventList";
 import { useEvents } from "@/components/events/useEvents";
@@ -38,6 +39,7 @@ export default function AccountView() {
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { formRef, reportFailure } = useFocusFirstError();
 
   useEffect(() => {
     if (!checking && (!session || session.user.is_anonymous)) router.replace("/login");
@@ -83,7 +85,10 @@ export default function AccountView() {
     setNameError(nameProblem ?? "");
     setPhoneError(phoneProblem ?? "");
     setSaved(false);
-    if (nameProblem || phoneProblem) return;
+    if (nameProblem || phoneProblem) {
+      reportFailure();
+      return;
+    }
 
     setSaving(true);
     setSaveError("");
@@ -96,6 +101,7 @@ export default function AccountView() {
     setSaving(false);
     if (error) {
       setSaveError("We couldn't save your changes. Please try again.");
+      reportFailure();
       return;
     }
     setProfile(data);
@@ -125,7 +131,7 @@ export default function AccountView() {
 
       <section className="bg-emerald-100/60">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 md:grid-cols-2 md:py-16">
-          <form onSubmit={saveProfile} noValidate className="rounded-2xl bg-amber-50 p-6 shadow-sm">
+          <form ref={formRef} onSubmit={saveProfile} noValidate className="rounded-2xl bg-amber-50 p-6 shadow-sm">
             <h2 className="text-lg font-bold">Your profile</h2>
             <p className="mt-2 text-emerald-900/80">
               Your public name shows next to the events you organize. Your phone stays private until you organize an event. Then signed-in members can see it and your email.
@@ -146,10 +152,11 @@ export default function AccountView() {
                 setSaved(false);
               }}
               aria-invalid={Boolean(nameError)}
+              aria-describedby={nameError ? "name-error" : undefined}
               className={`mt-2 ${inputClass}`}
             />
             {nameError && (
-              <p role="alert" className={errorClass}>
+              <p id="name-error" role="alert" className={errorClass}>
                 {nameError}
               </p>
             )}
@@ -168,10 +175,11 @@ export default function AccountView() {
                 setSaved(false);
               }}
               aria-invalid={Boolean(phoneError)}
+              aria-describedby={phoneError ? "phone-error" : undefined}
               className={`mt-2 ${inputClass}`}
             />
             {phoneError && (
-              <p role="alert" className={errorClass}>
+              <p id="phone-error" role="alert" className={errorClass}>
                 {phoneError}
               </p>
             )}

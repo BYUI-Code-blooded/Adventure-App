@@ -20,7 +20,8 @@ import {
 } from "@/lib/suggestions";
 import type { ActivityCategory, ActivityStatus } from "@/lib/types";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
-import { errorClass, inputClass, primaryClass, secondaryClass } from "@/components/auth/styles";
+import { errorClass, inputClass, primaryClass, secondaryClass, textareaClass } from "@/components/auth/styles";
+import { useFocusFirstError } from "@/components/auth/useFocusFirstError";
 import StatusBadge from "@/components/suggestions/StatusBadge";
 import type { Point } from "@/components/suggestions/LocationPicker";
 
@@ -84,6 +85,7 @@ export default function SuggestView() {
   const [submitError, setSubmitError] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const { formRef, reportFailure } = useFocusFirstError();
 
   const [mine, setMine] = useState<MySuggestion[] | null>(null);
   const [listError, setListError] = useState(false);
@@ -163,7 +165,10 @@ export default function SuggestView() {
     const found = check();
     setErrors(found);
     setSent(false);
-    if (Object.keys(found).length > 0 || !location) return;
+    if (Object.keys(found).length > 0 || !location) {
+      reportFailure();
+      return;
+    }
 
     setSending(true);
     setSubmitError("");
@@ -185,6 +190,7 @@ export default function SuggestView() {
           ? `You already have ${MAX_PENDING} ideas waiting for review. Wait for a review or delete one.`
           : "We couldn't send your idea. Please try again.",
       );
+      reportFailure();
       return;
     }
     setName("");
@@ -208,13 +214,13 @@ export default function SuggestView() {
       <Hero />
 
       <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:py-16 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <form onSubmit={submit} noValidate>
+        <form ref={formRef} onSubmit={submit} noValidate>
           <h2 className="text-2xl font-extrabold md:text-3xl">Tell us about it</h2>
 
           <label htmlFor="s-name" className="mt-6 block text-sm font-bold">Name</label>
           <input id="s-name" type="text" maxLength={NAME_MAX} value={name} onChange={(e) => setName(e.target.value)}
-            placeholder="Teton Dam overlook" aria-invalid={Boolean(errors.name)} className={`mt-2 ${inputClass}`} />
-          {errors.name && <p role="alert" className={errorClass}>{errors.name}</p>}
+            placeholder="Teton Dam overlook" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "s-name-error" : undefined} className={`mt-2 ${inputClass}`} />
+          {errors.name && <p id="s-name-error" role="alert" className={errorClass}>{errors.name}</p>}
 
           <label htmlFor="s-category" className="mt-5 block text-sm font-bold">Category</label>
           <select id="s-category" value={category} onChange={(e) => setCategory(e.target.value as ActivityCategory)} className={`mt-2 ${inputClass}`}>
@@ -226,36 +232,37 @@ export default function SuggestView() {
           </label>
           <textarea id="s-description" rows={4} maxLength={DESCRIPTION_MAX} value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="What makes it worth a visit?" aria-invalid={Boolean(errors.description)}
-            className="mt-2 w-full rounded-2xl border-2 border-emerald-900 bg-amber-50 px-5 py-3 text-emerald-950 placeholder:text-emerald-900/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" />
-          {errors.description && <p role="alert" className={errorClass}>{errors.description}</p>}
+            aria-describedby={errors.description ? "s-description-error" : undefined} className={`mt-2 ${textareaClass}`} />
+          {errors.description && <p id="s-description-error" role="alert" className={errorClass}>{errors.description}</p>}
 
           <label htmlFor="s-address" className="mt-5 block text-sm font-bold">
             Address <span className="font-normal text-emerald-900/80">(optional)</span>
           </label>
           <input id="s-address" type="text" maxLength={ADDRESS_MAX} value={address} onChange={(e) => setAddress(e.target.value)}
-            placeholder="123 Main St, Rexburg" aria-invalid={Boolean(errors.address)} className={`mt-2 ${inputClass}`} />
-          {errors.address && <p role="alert" className={errorClass}>{errors.address}</p>}
+            placeholder="123 Main St, Rexburg" aria-invalid={Boolean(errors.address)} aria-describedby={errors.address ? "s-address-error" : undefined} className={`mt-2 ${inputClass}`} />
+          {errors.address && <p id="s-address-error" role="alert" className={errorClass}>{errors.address}</p>}
 
           <label htmlFor="s-website" className="mt-5 block text-sm font-bold">
             Website <span className="font-normal text-emerald-900/80">(optional)</span>
           </label>
           <input id="s-website" type="url" value={website} onChange={(e) => setWebsite(e.target.value)}
-            placeholder="https://example.com" aria-invalid={Boolean(errors.website)} className={`mt-2 ${inputClass}`} />
-          {errors.website && <p role="alert" className={errorClass}>{errors.website}</p>}
+            placeholder="https://example.com" aria-invalid={Boolean(errors.website)} aria-describedby={errors.website ? "s-website-error" : undefined} className={`mt-2 ${inputClass}`} />
+          {errors.website && <p id="s-website-error" role="alert" className={errorClass}>{errors.website}</p>}
 
           <label htmlFor="s-photo" className="mt-5 block text-sm font-bold">
             Photo link <span className="font-normal text-emerald-900/80">(optional)</span>
           </label>
           <input id="s-photo" type="url" value={photo} onChange={(e) => setPhoto(e.target.value)}
-            placeholder="https://example.com/photo.jpg" aria-invalid={Boolean(errors.photo)} className={`mt-2 ${inputClass}`} />
-          {errors.photo && <p role="alert" className={errorClass}>{errors.photo}</p>}
+            placeholder="https://example.com/photo.jpg" aria-invalid={Boolean(errors.photo)} aria-describedby={errors.photo ? "s-photo-error" : undefined} className={`mt-2 ${inputClass}`} />
+          {errors.photo && <p id="s-photo-error" role="alert" className={errorClass}>{errors.photo}</p>}
 
           <p className="mt-5 text-sm font-bold">Where is it?</p>
           <p className="mt-1 text-sm text-emerald-900/80">Tap the map to drop a pin. Tap again to move it (within {MAX_DISTANCE_KM} km of Rexburg).</p>
-          <div className="mt-3 overflow-hidden rounded-2xl border-2 border-emerald-900 bg-emerald-900">
+          <div role="group" aria-label="Pin location" aria-describedby={errors.location ? "s-location-error" : undefined}
+            className={`mt-3 overflow-hidden rounded-2xl bg-emerald-900 ${errors.location ? "border-4 border-red-800" : "border-2 border-emerald-900"}`}>
             <LocationPicker value={location} onChange={(point) => { setLocation(point); setErrors((c) => ({ ...c, location: undefined })); }} />
           </div>
-          {errors.location && <p role="alert" className={errorClass}>{errors.location}</p>}
+          {errors.location && <p id="s-location-error" role="alert" className={errorClass}>{errors.location}</p>}
 
           {submitError && <p role="alert" className={errorClass}>{submitError}</p>}
           {atLimit && (

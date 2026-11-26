@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { useAuthProfile } from "@/components/auth/useAuthProfile";
-import { errorClass, inputClass, primaryClass, secondaryClass } from "@/components/auth/styles";
+import { errorClass, inputClass, primaryClass, secondaryClass, textareaClass } from "@/components/auth/styles";
+import { useFocusFirstError } from "@/components/auth/useFocusFirstError";
 import type { Point } from "@/components/suggestions/LocationPicker";
 import {
   EVENT_DESCRIPTION_MAX,
@@ -21,6 +22,7 @@ import {
   validateEventLocation,
   validateEventName,
   validateEventStart,
+  validateRecurrenceEnd,
   validateSpots,
 } from "@/lib/events";
 import { ADDRESS_MAX, MAX_DISTANCE_KM } from "@/lib/suggestions";
@@ -38,7 +40,7 @@ const LocationPicker = dynamic(() => import("@/components/suggestions/LocationPi
 
 type LinkedActivity = Pick<Activity, "id" | "name" | "address" | "lat" | "lon">;
 type EditableEvent = Pick<Event, "id" | "activity_id" | "name" | "description" | "address" | "lat" | "lon" | "start_time" | "end_time" | "max_participants" | "creator_id" | "recurrence_rule" | "recurrence_end_date">;
-type Errors = Partial<Record<"name" | "description" | "start" | "end" | "location" | "spots", string>>;
+type Errors = Partial<Record<"name" | "description" | "start" | "end" | "location" | "spots" | "repeatUntil", string>>;
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -196,6 +198,7 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
   const [submitError, setSubmitError] = useState("");
   const [sending, setSending] = useState(false);
   const [created, setCreated] = useState(false);
+  const { formRef, reportFailure } = useFocusFirstError();
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -209,9 +212,13 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
       end: validateEventEnd(startIso, endIso) ?? undefined,
       location: validateEventLocation(location, address) ?? undefined,
       spots: (unlimited ? null : validateSpots(spots)) ?? undefined,
+      repeatUntil: validateRecurrenceEnd(frequency, recurrenceEnd, startIso) ?? undefined,
     };
     setErrors(problems);
-    if (Object.values(problems).some(Boolean)) return;
+    if (Object.values(problems).some(Boolean)) {
+      reportFailure();
+      return;
+    }
 
     setSending(true);
     setSubmitError("");
@@ -234,6 +241,7 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
     setSending(false);
     if (error) {
       setSubmitError(`We couldn't ${editing ? "save your changes" : "create your event"}. Please try again.`);
+      reportFailure();
       return;
     }
     setCreated(true);
@@ -250,7 +258,7 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-12 md:py-16">
-      <form onSubmit={submit} noValidate>
+      <form ref={formRef} onSubmit={submit} noValidate>
         <h2 className="text-2xl font-extrabold md:text-3xl">{editing ? "Update your event" : "Tell people about it"}</h2>
         {activity && <p className="mt-2 font-semibold text-emerald-700">At {activity.name}</p>}
         {activityMissing && (
@@ -259,45 +267,52 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
 
         <label htmlFor="e-name" className="mt-6 block text-sm font-bold">Event name</label>
         <input id="e-name" type="text" maxLength={EVENT_NAME_MAX} value={name} onChange={(e) => setName(e.target.value)}
-          placeholder="Saturday morning hike" aria-invalid={Boolean(errors.name)} className={`mt-2 ${inputClass}`} />
-        {errors.name && <p role="alert" className={errorClass}>{errors.name}</p>}
+          placeholder="Saturday morning hike" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "e-name-error" : undefined} className={`mt-2 ${inputClass}`} />
+        {errors.name && <p id="e-name-error" role="alert" className={errorClass}>{errors.name}</p>}
 
         <label htmlFor="e-description" className="mt-5 block text-sm font-bold">Description</label>
         <textarea id="e-description" rows={4} maxLength={EVENT_DESCRIPTION_MAX} value={description} onChange={(e) => setDescription(e.target.value)}
           placeholder="What's the plan? What should people bring?" aria-invalid={Boolean(errors.description)}
-          className="mt-2 w-full rounded-2xl border-2 border-emerald-900 bg-amber-50 px-5 py-3 text-emerald-950 placeholder:text-emerald-900/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" />
-        {errors.description && <p role="alert" className={errorClass}>{errors.description}</p>}
+          aria-describedby={errors.description ? "e-description-error" : undefined} className={`mt-2 ${textareaClass}`} />
+        {errors.description && <p id="e-description-error" role="alert" className={errorClass}>{errors.description}</p>}
 
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="e-start" className="block text-sm font-bold">Starts <span className="font-normal text-emerald-900/80">(Rexburg time)</span></label>
             <input id="e-start" type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)}
-              aria-invalid={Boolean(errors.start)} className={`mt-2 ${inputClass}`} />
-            {errors.start && <p role="alert" className={errorClass}>{errors.start}</p>}
+              aria-invalid={Boolean(errors.start)} aria-describedby={errors.start ? "e-start-error" : undefined} className={`mt-2 ${inputClass}`} />
+            {errors.start && <p id="e-start-error" role="alert" className={errorClass}>{errors.start}</p>}
           </div>
           <div>
             <label htmlFor="e-end" className="block text-sm font-bold">Ends <span className="font-normal text-emerald-900/80">(Rexburg time)</span></label>
             <input id="e-end" type="datetime-local" value={end} min={start || undefined} onChange={(e) => setEnd(e.target.value)}
-              aria-invalid={Boolean(errors.end)} className={`mt-2 ${inputClass}`} />
-            {errors.end && <p role="alert" className={errorClass}>{errors.end}</p>}
+              aria-invalid={Boolean(errors.end)} aria-describedby={errors.end ? "e-end-error" : undefined} className={`mt-2 ${inputClass}`} />
+            {errors.end && <p id="e-end-error" role="alert" className={errorClass}>{errors.end}</p>}
           </div>
         </div>
 
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="e-repeat" className="block text-sm font-bold">Repeats</label>
-            <select id="e-repeat" value={frequency} onChange={(e) => setFrequency(e.target.value as RecurrenceFrequency)} className={`mt-2 ${inputClass}`}>
+            <select id="e-repeat" value={frequency} onChange={(e) => { setFrequency(e.target.value as RecurrenceFrequency); setErrors((c) => ({ ...c, repeatUntil: undefined })); }} className={`mt-2 ${inputClass}`}>
               <option value="none">Does not repeat</option><option value="weekly">Every week</option><option value="monthly">Every month</option>
             </select>
           </div>
-          {frequency !== "none" && <div><label htmlFor="e-repeat-until" className="block text-sm font-bold">Repeat until</label><input id="e-repeat-until" required type="date" value={recurrenceEnd} onChange={(e) => setRecurrenceEnd(e.target.value)} className={`mt-2 ${inputClass}`} /></div>}
+          {frequency !== "none" && (
+            <div>
+              <label htmlFor="e-repeat-until" className="block text-sm font-bold">Repeat until</label>
+              <input id="e-repeat-until" required type="date" value={recurrenceEnd} onChange={(e) => { setRecurrenceEnd(e.target.value); setErrors((c) => ({ ...c, repeatUntil: undefined })); }}
+                aria-invalid={Boolean(errors.repeatUntil)} aria-describedby={errors.repeatUntil ? "e-repeat-until-error" : undefined} className={`mt-2 ${inputClass}`} />
+              {errors.repeatUntil && <p id="e-repeat-until-error" role="alert" className={errorClass}>{errors.repeatUntil}</p>}
+            </div>
+          )}
         </div>
 
         <p className="mt-5 text-sm font-bold">Where is it?</p>
         <p className="mt-1 text-sm text-emerald-900/80">
           Add a pin, an address, or both. Tap the map to place the pin (within {MAX_DISTANCE_KM} km of Rexburg).
         </p>
-        <div className="mt-3 overflow-hidden rounded-2xl border-2 border-emerald-900 bg-emerald-900">
+        <div className={`mt-3 overflow-hidden rounded-2xl bg-emerald-900 ${errors.location ? "border-4 border-red-800" : "border-2 border-emerald-900"}`}>
           <LocationPicker value={location} centerOnValue onChange={(point) => { setLocation(point); setErrors((c) => ({ ...c, location: undefined })); }} />
         </div>
         {location && (
@@ -306,19 +321,19 @@ function EventFields({ activity, activityMissing, pin, session, profile, eventTo
 
         <label htmlFor="e-address" className="mt-5 block text-sm font-bold">Address</label>
         <input id="e-address" type="text" maxLength={ADDRESS_MAX} value={address} onChange={(e) => setAddress(e.target.value)}
-          placeholder="123 Main St, Rexburg" aria-invalid={Boolean(errors.location)} className={`mt-2 ${inputClass}`} />
-        {errors.location && <p role="alert" className={errorClass}>{errors.location}</p>}
+          placeholder="123 Main St, Rexburg" aria-invalid={Boolean(errors.location)} aria-describedby={errors.location ? "e-location-error" : undefined} className={`mt-2 ${inputClass}`} />
+        {errors.location && <p id="e-location-error" role="alert" className={errorClass}>{errors.location}</p>}
 
         <label htmlFor="e-spots" className="mt-5 block text-sm font-bold">How many people can join?</label>
         <input id="e-spots" type="number" inputMode="numeric" min={1} max={EVENT_SPOTS_MAX} step={1} value={unlimited ? "" : spots} disabled={unlimited}
-          onChange={(e) => setSpots(e.target.value)} placeholder="10" aria-invalid={Boolean(errors.spots)}
+          onChange={(e) => setSpots(e.target.value)} placeholder="10" aria-invalid={Boolean(errors.spots)} aria-describedby={errors.spots ? "e-spots-error" : undefined}
           className={`mt-2 ${inputClass} disabled:cursor-not-allowed disabled:opacity-60`} />
         <label className="mt-3 flex min-h-11 items-center gap-3 font-semibold">
           <input type="checkbox" checked={unlimited} className="size-5 accent-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
             onChange={(e) => { setUnlimited(e.target.checked); setErrors((c) => ({ ...c, spots: undefined })); }} />
           Unlimited
         </label>
-        {errors.spots && <p role="alert" className={errorClass}>{errors.spots}</p>}
+        {errors.spots && <p id="e-spots-error" role="alert" className={errorClass}>{errors.spots}</p>}
 
         <div className="mt-5 rounded-2xl bg-emerald-100/60 p-5">
           <h3 className="text-lg font-bold">Organized by</h3>
